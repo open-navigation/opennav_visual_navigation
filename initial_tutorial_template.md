@@ -56,23 +56,63 @@ TODO diagram showing these concepts visually - with current and replacement solu
 NVIDIA provides the necessary technologies to replace the existing Lidar-based navigation solutions.
 This is made possible by fully leveraging the power of NVIDIA's GPU and the Isaac ROS SDK.
 
-  * 
+TODO Table for 1:1 Nvidia replaces to make this possible.
 
-		- depth data use-cases (mapping/reconstruction)
-		- mapping (generate map),
-		- localization (localize within a map), 
-		- 3D Scene Reconstruction (cost grid)
+**Data Acquisition**:
 
-	- What Nvidia replaces to make this possible (table?)
-		- Depth Perception --> Lidar depth points and/or depth camera. 1:1 replacement.
-		- VSLAM / Localization / Visual Global Localization --> AMCL, SLAM Toolbox. 1:1 replacement.
-		- NVBlox --> Voxel Layer. Does the reconstruction and sent to costmap2d just as the method for combining it with potentially other data and as the data structure planner/controllers expect to standardized represnetaiton.
+Depth acquisition with Lidar- and Depth-based sensors is relatively straight forward.
+For the majority of cases, a ROS driver will connect to the sensor and provide the depth data in a standard format like a Depth Image or PointCloud2.
+Sometimes post-processing is needed to remove noise or other artifacts to improve later 3D reconstruction.
 
-  - Chart showing the workflow for this to explain
+In the Vision-based navigation, we instead require more stages to obtain both the sensor data and derived results needed for 3D reconstructions to build the environmental model required for global path planning and local trajectory planning (control). 
 
-Visual Global Localization: visual features not lidar to do intiial pose finding. Just run for 1-shot here's where you are in the map
+Data is first acquired via the Jetson's libargus or a sensor manufacturer provided library to obtain sensor data in a low-latency, time synchronized way to enable accurate information for Visual mapping and localization purposes.
+This is key for good performance of a vision-based solution and many sensors are supported.
+The disperity is then estimated using Isaac's ``isaac_ros_ess``, which computes a GPU accelerated, deep-learned stereo disparity image.
+Finally, ``isaac_ros_stereo_image_proc`` converts the disparity image into a Depth Image used for later 3D reconstruction.
 
-cuSLAM does VIO and SLAM mode. cuVSLAM does global localization based on output of cuVGL. Pure localization: no updating features or evolving the map
+.. note:
+
+  ```isaac_ros_stereo_image_proc`` may also compute a PointCloud2 as well if an application calls for pointcloud rather than depth image format.
+
+**Data Fusion**:
+
+Once we'd obtained the depth information from the stereo pair, we can use this for environmental model construction and updates so we can leverage knowledge about the environment to make intelligent planning and control choices.
+While definitionally 3D Reconstruction methods may not require depth information from camera feeds, most modern and robust solutions require it, hence the need for the Isaac SDK's depth estimation pipeline.
+
+NVIDIA provides a great 3D Reconstruction solution called `NvBlox <https://github.com/nvidia-isaac/nvblox>`_.
+NvBlox is a GPU accelerated signed-distance field library which can be used to generate environmental models using voxel grids.
+This can take in multiple depth images from stereo camera pairs and populate a 3D environmental representation.
+
+It can also accept an optional semantic segmentation mask to detect people, robots, or other dynamic objects in the scene to remove them from the environmental model's update.
+These dynamic obstacles are then later re-inserted at the end of the update to avoid artifacts in environmental updates related to dynamic obstacles without the need of expensive clearing logic.
+Common demonstrations show this with a particular human segmentation model, but any model may be used trained to segment out any number of object classes.
+
+TODO [include this graphic](https://media.githubusercontent.com/media/NVIDIA-ISAAC-ROS/.github/main/resources/isaac_ros_docs/repositories_and_packages/isaac_ros_nvblox/isaac_ros_nvblox_nodegraph.png/) 
+
+The NvBlox model is hosted inside of the Costmap2D package as a Costmap Layer Plugin used to update the occupancy grid model for use in planning and control.
+Future updated to Nav2 may make it possible to use 3D environmental models natively rather than reducing dimensionality for use-cases that require 3D collision checking like mobile manipulation and traversibility estimation.
+
+This removes the need to work with a Voxel Layer, Spatio-Temporal Voxel Layer, Obstacle Layer, or other sensor processing layers to mark and clear data from the occupancy grid.
+
+**Mapping**:
+
+Mapping is crutial for long-term planning to understand the environment and know how to navigate from a given point to any other point in a space most optimally.
+While short-term navigation tasks with immediate visibility of the space may not require a pre-built map, most practically deployed applications require either (1) time-optimal execution and cannot get lost attempting to navigate down incorrect areas that will not lead to a solution or (2) operate in large spaces where the target poses are not commonly visible from current sensor data to establish a route to the goal.
+
+`cuVSLAM <https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_visual_slam/index.html>`_ is used for visual SLAM (VSLAM) to create and save a map of the environment from sensor data.
+This is a pure visual mapping solution that uses only stereo camera images and IMU data to map the environment using stereo feature matching.
+Due to the computational demands of the mapping process on moderately large spaces, this is completed offline from a teleoperated data collection run.
+
+**Localization**:
+
+cuVSLAM is also used for run-time pure localization within the feature map generated during the mapping run.
+This can run in excess of 30 fps with 4 stereo camera pairs or even faster with fewer on the Jetson AGX Orin.
+
+Additionally, the Visual Global Localization utility is used to identify the initial starting pose in a localization run when one is not already previously known. 
+Using the features in at the initial pose, it will match those with the pre-built map to identify the starting pose one-time on startup before continuing the localization session with cuVSLAM - solving the kidnapped robot problem.
+
+TODO Chart showing the workflow for this to explain in conclusion
 
 ## 0. Nvidia Jetson Setup
 
