@@ -4,6 +4,7 @@ TODO
 	- [ ] Software configs/launch/etc
 	- [ ] Tutorial
 
+Include Nvidia tutorials, configuration pages, and docs in this document for how to learn more / get more inofmration.
 
 
 # Lidar-Free, Vision-Based Navigation
@@ -103,14 +104,16 @@ While short-term navigation tasks with immediate visibility of the space may not
 `cuVSLAM <https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_visual_slam/index.html>`_ is used for visual SLAM (VSLAM) to create and save a map of the environment from sensor data.
 This is a pure visual mapping solution that uses only stereo camera images and IMU data to map the environment using stereo feature matching.
 Due to the computational demands of the mapping process on moderately large spaces, this is completed offline from a teleoperated data collection run.
+This fully replaces 2D, 3D, or other types of Lidar-SLAM.
 
 **Localization**:
 
 cuVSLAM is also used for run-time pure localization within the feature map generated during the mapping run.
-This can run in excess of 30 fps with 4 stereo camera pairs or even faster with fewer on the Jetson AGX Orin.
+This can run in excess of 30 fps with 4 stereo camera pairs, or even faster with fewer on the Jetson AGX Orin.
 
-Additionally, the Visual Global Localization utility is used to identify the initial starting pose in a localization run when one is not already previously known. 
+Additionally, a utility that Isaac ROS SDK provides, Visual Global Localization, is used to identify the initial starting pose in a localization run when one is not already previously known.
 Using the features in at the initial pose, it will match those with the pre-built map to identify the starting pose one-time on startup before continuing the localization session with cuVSLAM - solving the kidnapped robot problem.
+This will be used to set the initial pose of the robot before starting navigation sessions.
 
 TODO Chart showing the workflow for this to explain in conclusion
 
@@ -118,40 +121,35 @@ TODO Chart showing the workflow for this to explain in conclusion
 
 ### Jetpack
 
-If you don't already have the latest jetpack installed follow the instructions in the collapsed section below (Jetpack 6.2 at the time of writing).
+If you don't already have the latest jetpack installed follow the instructions below.
+The current version at the time of writing is Jetpack 6.2
 
->>>> COLLAPSED
+If the Jetson is currently running Jetpack 6.0 or higher, `please use this guide to upgrade using apt to Jetpack 6.2 <https://docs.nvidia.com/jetson/jetpack/install-setup/index.html#upgrade-jetpack>`_.
+Otherwise, the `NVIDIA SDK Manager <https://developer.nvidia.com/sdk-manager>`_ is required to upgrade, either as a docker image or debian to run on a developer computer.
 
-On Jetpack 6.0+? https://docs.nvidia.com/jetson/jetpack/install-setup/index.html#upgrade-jetpack apt install new version easy enough.
+.. note:
 
-Else, Install the SDK Manager at https://developer.nvidia.com/sdk-manager either as a docker image or debian on your developer machine.
-
-Create or log into your nvidia account.
-
-Plug in your Jetson via USB-C from the USB-C port in the back of the Jetson (it is used for bootloading)
-
-Follow the instructions on this page, paying attention to use the right Jetson product: https://docs.nvidia.com/sdk-manager/install-with-sdkm-jetson/index.html. 
-
-Pay attention that the IP address they're asking for is the wired address with the USB-C connection, not its wireless IP.
-
-Note: if you have any problems consider flashing script (TODO)
-
->>>>
+  Be sure to have the Jetson's USB-C port used for bootloading accessible if upgrading using the SDK Manager. Use the IP addresses of this wired connection, not over a local WAN.
 
 ### Power Modes
 
-If not already setup in Max Power Mode, we recommend you do so now to be able to leverage the full power of the Jetson. If in a highly power constrained application, consider which power setting make most sense for your power resources, compute requirements, and application duration. Revisit this after the demonstration to optimize for your requirements and power needs.
+If not already setup in Max Power Mode, we recommend you do so now to be able to leverage the full power of the Jetson.
+If in a highly power constrained application, consider which power setting make most sense for your power resources, compute requirements, and application duration.
+Revisit this after the demonstration to optimize for your requirements and power needs.
 
-### Cameras
+### Compatible Cameras
 
-We love stereolabs ... but others work (include? How to do this without pissing off Stereolabs. Ping them for a tutorial usign their spatial AI?)
+There are several cameras that are compatible with this workflow.
+We recommend the `Stereolabs ZED <https://www.stereolabs.com/>`_ cameras for their native integration with the NVIDIA ecosystem and ease of use.
+Stereolabs also provides a powerful SDK of Vision and Spatial AI features which can be further leveraged to increase the functionality and intelligence of a vision-based mobile robot.
+However, stereo cameras from `Leopard Imaging <https://leopardimaging.com/leopard-imaging-hawk-stereo-cameras/>`_ are also compatible and supported.
 
-VSLAM requires tightly time synchronized setup. Recommend HAWK, ZED, Orbecc Rig. Resolution and calibration sensitive.
-  Also needs multiple cameras to work well from their experience 
-
-NVBLOX can work well with 1 camera. Less sensitive. Needs pose esetimate that VSLAM provides, but can be from any source. But trusts it word of god without correction.
-
- compatible with Argus or similar capture and synchronization technol
+Cameras with tight integration and synchronization are required to work with cuVSLAM due to its timing constraints to achieve accurate results.
+Thus, we recommend using one of these compatible options.
+However, if you'd like to use NvBlox without cuVSLAM and using another localization and mapping solution, a broader range of camera options are available such as the Realsense.
+NvBlox uses the pose estimates that cuVSLAM provides, but those pose estimates can be from any source.
+It uses these pose estimates to place the sensor data in the scene to populate the environmental model.
+NvBlox can work well on just a single stereo camera, but cuVSLAM typically requires two or more cameras to see enough of the scene to obtain robust results.
 
 ## 1. Initial Setup
 
