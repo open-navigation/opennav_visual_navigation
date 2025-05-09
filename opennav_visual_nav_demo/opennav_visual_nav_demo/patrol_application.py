@@ -204,6 +204,15 @@ class VisualNavigationPatrol(Node):
                         marker.pose.position.x,
                         marker.pose.position.y - 0.07))  # offset for text height in msg
 
+    def goalToWp(self, goal):
+        # Convert the goal to an orientation-less waypoint for the navigator
+        wp = PoseStamped()
+        wp.header.frame_id = 'map'
+        wp.header.stamp = self.navigator.get_clock().now().to_msg()
+        wp.pose.position.x = goal.x
+        wp.pose.position.y = goal.y
+        return wp
+
     def runDemo(self):
         stop = False
         nav_start = self.navigator.get_clock().now()
@@ -217,6 +226,7 @@ class VisualNavigationPatrol(Node):
         # self.navigator.setInitialPose(init_pose)
         self.navigator.clearAllCostmaps()
         self.undockRobot(dock_type='charging_dock')
+        goal = GraphNodeLocation(0, 0, 0)
 
         while rclpy.ok() and stop is False:
             if len(self.graph_nodes) == 0:
@@ -225,11 +235,15 @@ class VisualNavigationPatrol(Node):
             
             # Find our next location to patrol to, could be replaced with a formal
             # policy to select the next location based on a set of application rules
-            goal = random.choice(self.graph_nodes)
+            # Ensure its diffent from the last location
+            next_goal = random.choice(self.graph_nodes)
+            while goal.id == next_goal.id:
+                next_goal = random.choice(self.graph_nodes)
+            goal = new_goal
             print(f'Navigating to the next patrol location {goal.id} ({goal.x}, {goal.y})')
 
-            # Go to next patrol location on the graph
-            # self.navigator.goToPose() #TODO use the IDX. Do I need a navigator? Fuck.
+            # Go to next patrol location on the graph, behavior tree uses Route Server
+            self.navigator.goToPose(self.goalToWp(goal))
             while not self.navigator.isTaskComplete() or not rclpy.ok():
                 #########################################################################
                 # PLACE ANY APPLICATION FEEDBACK PROCESSING CODE HERE

@@ -185,3 +185,11 @@ ros2 launch nova_carter_bringup navigation.launch.py stereo_camera_configuration
         nvblox_map_slice_topic: "/nvblox_node/static_map_slice"
         convert_to_binary_costmap: True
   ```
+
+
+CONFIG:
+  - MPPI 
+  - Goal checker with 2PI orientation checking for just XY use since the goals have no tolerance
+  - BT using graph navigation with off graph connections (make sure not to compute if trivialized / on graph)
+  - NavFn otherwise or Smac?
+  - 

@@ -243,13 +243,57 @@ NVBlox, visual global localizer, localization
 
 ## 5. Demonstration
 
-TODO Route? Random point selection? The sample will perform a security patrol looping the space indefinitely with feasible planning and model predictive control until the battery is low, then will autonomously dock to its charging station until sufficiently re-energized to continue the mission.
+### Application Description
+
+The demonstration uses the new (as of May 2025) feature: Nav2 Route Server.
+This uses a pre-defined graph of nodes and edges to use for long-range routing rather than global planning through a space.
+This can be usefulf for spaces that are too large to map, too large to realistically represent with a dense environmental model, applications where determinisim in routing is necessary, or applications where its important to limit where the robot is allowed to navigate (lanes, zones, etc).
+
+The visual navigation demonstration uses the route server to patrol a space using this route graph.
+We select a random node for demonstration purposes to allow the robot to navigate across the space frequently, but a structured policy could easily be created to optimize the patrol routing and task completion for specific applicaitons.
+The robot will continue to patrol indefinitely until the battery level is low.
+Once it is below a threshold, it will return to the dock to charge automatically.
+After its above a set threshold, it will continue the patrolling task until canceled by the user application (i.e. joystick button for demonstration purposes).
+After which, the robot will also automatically dock with the charger and wait for its next instruction for a full closed-loop behavior.
+
+TODO show raoute graph / map of the space
+
+Because Visual SLAM has difficulty localizing a robot too far from poses taken during the feature map generation phase, this Route Server is a perfect pairing of technologies as long as the mapping session is similarly representative of the later graph traversals.
+
+The demonstration was completed using the same instructions above for the initial mapping phase and larger task execution with vision-based navigation & localization.
+
+### Behavior Tree
+
+This demonstration uses the route graph within the Behavior Tree to navigate between nodes using the navigation graph rather than freespace planning to ensure determinism of execution to keep the robot in approved areas & capturing necessary security data.
+The route is computed on the initial request as well as when the route itself is found to be in collision in order to reroute around obstacles.
+
+Within the behavior tree, if the robot is too far away from a given graph node to start, the behavior tree will automatically freespace plan the robot to the nearest node to get on the graph ('first meter').
+Similarly, if the goal pose does not conincide with a graph node, the behavior tree will also freespace plan to get to the final pose from the nearest graph node ('last meter') using a kinematically feasible planner.
+
+This behavior tree uses the route as the global path to follow, so it is post-processed using the Nav2 Smoother to smooth out corners and turns to be more easily navigable.
+In other applications, the route nodes and edges can be used directly to seed global planning in order to obtain freespace plans using the route as a general guide for the overall behavior, but still respond to cost grid or behavioral constraints.
+
+As with other Nav2 behavior trees, it also has contextual and global recovery behaviors to handle faults.
+
+TODO Link to the BT XML + image of it
+
+### Configuration
+
+TODO
+MPPI, Smac Hybrid-A*, Goal Checker, NvBlox, 
+The control will use a model predictive controller to avoid obstacles and follow the path.
+Link to the configuration file
+
+### Videos
+
+TODO video of the demo (roobt view)
+
+TODO video of he demo (rviz view with graph + nvblox + camera?)
 
 
 ## 6. Conclusions & Extensions
 
-TODO conclusion
-
+In this tutorial, we showed how Nav2 can be used without lidar or depth cameras to conduct vision-only navigation leveraging NVIDA's technologies (Jetson, Isaac ROS, Isaac Perceptor).
 To leverage even more vision features during Visual Navigation, you can also use the Isaac SDK, ZED SDK, or other AI technologies to leverage the GPU for:
 
   * Object detection or semantic segmentation
@@ -257,7 +301,7 @@ To leverage even more vision features during Visual Navigation, you can also use
   * Explore other VSLAM, VIO, or 3D Mapping technologies
 
 
-## Resources
+### Resources
 
 More detailed information can be found in the following documentation:
 
