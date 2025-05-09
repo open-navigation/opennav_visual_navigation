@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>opennav_visual_nav_bringup</name>
+  <version>0.0.1</version>
+  <description>A demonstration for visual navigation using Nav2 and NVIDIA Jetson/Isaac technologies</description>
+  <maintainer email="steve@opennav.org">Steve Macenski</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <build>isaac_ros_visual_slam</build>
+  <build>isaac_ros_visual_global_localization</build>
+  <build>isaac_ros_nvblox</build>
+  <build>isaac_ros_nitros</build>
+  <build>isaac_ros_image_pipeline</build>
+  <build>isaac_perceptor</build> 
+  <build>isaac_mapping_ros</build> 
+
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_cmake_pytest</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+  <test_depend>ament_lint_auto</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

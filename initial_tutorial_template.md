@@ -3,13 +3,11 @@ TODO
 	- [ ] Demos
 	- [ ] Software configs/launch/etc
 	- [ ] Tutorial
-
-Include Nvidia tutorials, configuration pages, and docs in this document for how to learn more / get more inofmration.
-
+	- [ ] README tutorial link + video + image
 
 # Lidar-Free, Vision-Based Navigation
 
-In this tutorial, you'll learn how to harness the power of NVIDIA Jetson platforms and `Isaac ROS <https://developer.nvidia.com/isaac/ros>`_ technologies to implement Vision-based Navigation entirely without the use of Lidars, active depth sensors, or other range-providing modalities. 
+In this tutorial, you'll learn how to harness the power of NVIDIA Jetson platforms, `Isaac ROS <https://developer.nvidia.com/isaac/ros>`_, and `Isaac Perceptor <https://developer.nvidia.com/isaac/perceptor>`_ technologies to implement Vision-based Navigation entirely without the use of Lidars, active depth sensors, or other range-providing modalities. 
 Instead, we'll rely solely on passive stereo cameras as the extrinsic sensing source to achieve collision avoidance, localization, and mapping — a powerful and cost-effective alternative. 
 
 This tutorial will guide you through the fundamental concepts behind vision-based navigation, explain how to configure and launch a vision-enabled Nav2 stack optimized for NVIDIA hardware, and culminate in a hands-on demonstration of a mobile robot performing autonomous security patrols.
@@ -55,7 +53,7 @@ TODO diagram showing these concepts visually - with current and replacement solu
 ### Nvidia Technologies
 
 NVIDIA provides the necessary technologies to replace the existing Lidar-based navigation solutions.
-This is made possible by fully leveraging the power of NVIDIA's GPU and the Isaac ROS SDK.
+This is made possible by fully leveraging the power of NVIDIA's GPU and the Isaac ROS & Perceptor SDKs.
 
 TODO Table for 1:1 Nvidia replaces to make this possible.
 
@@ -111,9 +109,10 @@ This fully replaces 2D, 3D, or other types of Lidar-SLAM.
 cuVSLAM is also used for run-time pure localization within the feature map generated during the mapping run.
 This can run in excess of 30 fps with 4 stereo camera pairs, or even faster with fewer on the Jetson AGX Orin.
 
-Additionally, a utility that Isaac ROS SDK provides, Visual Global Localization, is used to identify the initial starting pose in a localization run when one is not already previously known.
+Additionally, a utility that Isaac ROS SDK provides, Visual Global Localization (cuVGL), is used to identify the initial starting pose in a localization run when one is not already previously known.
 Using the features in at the initial pose, it will match those with the pre-built map to identify the starting pose one-time on startup before continuing the localization session with cuVSLAM - solving the kidnapped robot problem.
 This will be used to set the initial pose of the robot before starting navigation sessions.
+It may also be used to relocalize the robot during runtime as well, which can be run in just under 1 second.
 
 TODO Chart showing the workflow for this to explain in conclusion
 
@@ -122,7 +121,7 @@ TODO Chart showing the workflow for this to explain in conclusion
 ### Jetpack
 
 If you don't already have the latest jetpack installed follow the instructions below.
-The current version at the time of writing is Jetpack 6.2
+The current version at the time of writing is Jetpack 6.2 with Isaac 3.2.
 
 If the Jetson is currently running Jetpack 6.0 or higher, `please use this guide to upgrade using apt to Jetpack 6.2 <https://docs.nvidia.com/jetson/jetpack/install-setup/index.html#upgrade-jetpack>`_.
 Otherwise, the `NVIDIA SDK Manager <https://developer.nvidia.com/sdk-manager>`_ is required to upgrade, either as a docker image or debian to run on a developer computer.
@@ -153,35 +152,117 @@ NvBlox can work well on just a single stereo camera, but cuVSLAM typically requi
 
 ## 1. Initial Setup
 
+First, we need to set up a `Isaac ROS Dev<https://nvidia-isaac-ros.github.io/getting_started/dev_env_setup.html>`_ environment using Docker, as highly recommended by NVIDIA.
+
+.. code: bash
+
+  sudo systemctl daemon-reload && sudo systemctl restart docker
+  sudo apt install git-lfs
+  git lfs install --skip-repo
+
+  mkdir -p  /mnt/nova_ssd/workspaces/isaac_ros-dev/src  # Or ~/workspaces/isaac_ros-dev/src if not using SSD
+  echo "export ISAAC_ROS_WS=/mnt/nova_ssd/workspaces/isaac_ros-dev/" >> ~/.bashrc  # Or ${HOME}/workspaces/isaac_ros-dev/ if not using SSD
+  source ~/.bashrc
+
+This sets up Git LFS (large file storage) for downloading weights and files stored if the Isaac ROS source repositories.
+It also creates a developer workspace ``isaac_ros-dev`` either on an externally mounted SSD or on the local computer.
+It is recommended to use an externally mounted SSD to have sufficient storage to run this demonstration.
+If one is not available, replace ``/mnt/nova_ssd/workspaces/isaac_ros-dev/`` with ``${HOME}/workspaces/isaac_ros-dev/`` in the commands above.
+This also sets an environmental variable ``ISAAC_ROS_WS`` which is used to mount the workspace to the Isaac ROS containers and in other Isaac workflows.
+
+Next, we're going to clone the ``isaac_ros_common`` package which contains key elements of Isaac ROS, including the dockerfiles and scripts needed to run Isaac in the Dev environment.
+
+.. code: bash
+
+  cd ${ISAAC_ROS_WS}/src && git clone -b release-3.2 https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_common.git
+
+If working with a Nova CRarter device, `do the following <https://nvidia-isaac-ros.github.io/robots/nova_carter/getting_started.html#repositories-setup-optional>`_ as well to setup the docker configs.
+
+We're now ready to launch the container, we can do so via:
+
+.. code: bash
+
+  cd ${ISAAC_ROS_WS}/src/isaac_ros_common && ./scripts/run_dev.sh
+
+Once we've obtained and setup Isaac, we can add in the ``opennav_visual_navigation`` project as a starting point.
+
+.. code: bash
+  # Clones the project and creates a colcon_ws relative to your pat 
+  cd ${ISAAC_ROS_WS}/src && git clone git@github.com:open-navigation/opennav_visual_navigation.git
+  
+  # Obtains dependencies
+  rosdep init  # If not previously initialized
+  rosdep update
+  rosdep install -r -y --from-paths colcon_ws/src --ignore-src
+
+  # Initially builds the workspace
+  source /opt/ros/humble/setup.bash
+  colcon build --symlink-install
+
+If you'd like to make modifications for your platform, fork the ``opennav_visual_navigation`` repository, clone your fork instead.
+
+TODO other setup things like NGC resource or package installs
+
+## 2. Software Walkthrough
+
+This project is comprised of a few packages:
+  * ``opennav_visual_nav_bringup``: The bringup for the Visual Navigation using Nav2 and Isaac ROS
+  * ``opennav_visual_nav_demo``: The application demo leveraging Visual Navigation to perform a security patroling task
+
+The demonstration leverages the Nova Carter robot, so the hardware is brought up using the ``nova_carter_bringup`` launch file ``teleop.launch.py`` which launches the robot hardware.
+
+
+
 TODO
-  - OR fork this package? https://github.com/open-navigation/opennav_visual_navigation
 	- Adjust Nav2 params file
 	- Configure the Isaac nodes
 	- Launch file to include nodes
-	- Docker ... other stuff
+
+  - TODO GIVE UP AND USE JUST NVIDIA WORK THAT DOESN'T GENERALIZE --> THE 'DEMO' IS THE APPLICATION AND SHOWING WORKING, NOT THE SETUP ITSELF?
 
 TODO
-Recommends: 2 cameras (front and back) for 
+Recommends: 3 cameras launched (front, left, right)
+            2 cameras for VSLAM
             2 cameras (sides) for 
 
 TODO people semgnetatino is not just people, any masked segmentation will work (people just current example)
 
-## 2. Configuration
-
-
+YOu've made this really hard to work with and integrate using all these NV specific launch tools. I can't tell what's what and how things are parsed and stored.
 
 ## 3. Initial Environment Mapping
 
-Using launch file ... map ... teleop ... offline process from NV. May take awhile.
-
+TODO Using launch file ... map ... teleop ... offline process from NV. May take awhile.
+  online possible? docs seem to imply it is
 
 ## 4. Navigation Testing
 
-Once the initial offline map is complete, we are ready to start navigating!
+TODO Once the initial offline map is complete, we are ready to start navigating!
 
 NVBlox, visual global localizer, localization
 
 
 ## 5. Demonstration
 
-Route? Random point selection? The sample will perform a security patrol looping the space indefinitely with feasible planning and model predictive control until the battery is low, then will autonomously dock to its charging station until sufficiently re-energized to continue the mission.
+TODO Route? Random point selection? The sample will perform a security patrol looping the space indefinitely with feasible planning and model predictive control until the battery is low, then will autonomously dock to its charging station until sufficiently re-energized to continue the mission.
+
+
+## 6. Conclusions & Extensions
+
+TODO conclusion
+
+To leverage even more vision features during Visual Navigation, you can also use the Isaac SDK, ZED SDK, or other AI technologies to leverage the GPU for:
+
+  * Object detection or semantic segmentation
+  * Ground or freespace segmentation
+  * Explore other VSLAM, VIO, or 3D Mapping technologies
+
+
+## Resources
+
+More detailed information can be found in the following documentation:
+
+* `Isaac ROS Visual SLAM <https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_visual_slam/isaac_ros_visual_slam/index.html>`_
+* `Isaac ROS NvBlox <https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_nvblox/index.html>`_
+* `Isaac ROS Visual GLobal Localization <https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_mapping_and_localization/isaac_ros_visual_global_localization/index.html>`_
+* `Isaac ROS Stereo Image Proc <https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_image_pipeline/isaac_ros_stereo_image_proc/index.html>`_
+* `Isaac Perceptor <https://nvidia-isaac-ros.github.io/reference_workflows/isaac_perceptor/index.html>`_
