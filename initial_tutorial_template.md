@@ -11,14 +11,26 @@ TODO demo
   - [ ] Backport Route to Humble
   - [ ] teleop might be automatically launched with the nova recorder for some reason
 
+NV feedback
+  - Too tied into NV tooling
+    - launch uses an NV wrapper that is not clear how to decypher. Also hard to integrate with as a result for anyone else.
+  - Software is too single-purpose specific
+    - None works without Nova
+    - Only works if exactly 1 workflow is followed setting env var or configs for applications (fragile)
+    - Things are nested in uninutitive ways that make it impossible for reuse. Recorder launches teleop of robot base. perceptor includes Nav2 + configs can't rip out. Hardware is launched when enabling perception stack (backwards) that make it inoperable for anyone else - can't do anything without restarting.
+    - Can't really be reapplied (at least not easily) to any other stiuation but the one NV created to make the demo
+  - Docs are twisted, interconnected and non-linear, it took me hours of back and forth to extract information and still feel like its not telling me the full story on configurations, setup, how to work with it outside of the 1 situation using the nova platform, etc
+  
+  --> Had to change from a codebase intended as a forkable platform that folks could modify for their situation as a working demo to build off of and INSTEAD make it a technology demonstration of only the 1 situation we have with the Nova Carter to show its possible, but only in this narrow situation. Tech demo to show its possible rather than a usable platform for users to build fromf for their unique needs.
+
 # Lidar-Free, Vision-Based Navigation
 
-In this tutorial, you'll learn how to harness the power of NVIDIA Jetson platforms, `Isaac ROS <https://developer.nvidia.com/isaac/ros>`_, and `Isaac Perceptor <https://developer.nvidia.com/isaac/perceptor>`_ technologies to implement Vision-based Navigation entirely without the use of Lidars, active depth sensors, or other range-providing modalities. 
+In this tutorial, you'll learn how to harness the power of Jetson platforms, `Isaac ROS <https://developer.nvidia.com/isaac/ros>`_, `Isaac Perceptor <https://developer.nvidia.com/isaac/perceptor>`_, and `NVIDIA Nova <https://nvidia-isaac-ros.github.io/nova/index.html>`_ technologies to implement Vision-based Navigation entirely without the use of Lidars, active depth sensors, or other range-providing modalities. 
 Instead, we'll rely solely on passive stereo cameras as the extrinsic sensing source to achieve collision avoidance, localization, and mapping — a powerful and cost-effective alternative. 
 
-This tutorial will guide you through the fundamental concepts behind vision-based navigation, explain how to configure and launch a vision-enabled Nav2 stack optimized for NVIDIA hardware, and culminate in a hands-on demonstration of a mobile robot performing autonomous security patrols.
+This tutorial will guide you through the fundamental concepts behind vision-based navigation, explain how to configure and launch a vision-enabled Nav2 stack optimized for NVIDIA hardware, and culminate in a hardware demonstration of a mobile robot performing autonomous security patrols.
 
-Whether you're developing for resource-constrained embedded systems or exploring alternatives to expensive sensor suites, this walk-through provides a complete and practical introduction to deploying advanced autonomous navigation with only vision-based perception.
+Whether you're developing for resource-constrained embedded systems or exploring alternatives to expensive sensor suites, this walk-through provides a complete introduction to deploying advanced autonomous navigation with only vision-based perception using a NVIDIA Nova reference platform.
 
 .. note:
 
@@ -30,7 +42,9 @@ Whether you're developing for resource-constrained embedded systems or exploring
 
 This tutorial assumes that you have an NVIDIA Jetson platform - such as the Orin NX or AGX Orin - and stereo camera sensor(s).
 This tutorial will make use of the `Jetson AGX Orin <https://amzn.to/4k8jiQh>`_ powering the `Segway Nova Carter <https://robotics.segway.com/nova-carter/>`_ robot built in collaboration with NVIDIA for vision-based navigation tasks.
-However, another Jetson product may suffice depending on the GPU compute demands placed on it by the number of cameras, resolutions, and models being run. 
+However, another Jetson product may suffice depending on the GPU compute demands placed on it by the number of cameras, resolutions, and models being run.
+This also assumes that you have a Nova compatiable reference design (whereas Nova Carter is one), as this tutorial makes integrated use of Nova tooling.
+Applying these technologies to a non-Nova design is possible using the general concepts and designs in this tutorial, however it involves a great deal of unique development as the launch files and nodes provided by NVIDIA assume this.
 
 ### Concepts
 
@@ -136,6 +150,10 @@ Otherwise, the `NVIDIA SDK Manager <https://developer.nvidia.com/sdk-manager>`_ 
 
   Be sure to have the Jetson's USB-C port used for bootloading accessible if upgrading using the SDK Manager. Use the IP addresses of this wired connection, not over a local WAN.
 
+### Nova Init
+
+If not already setup, make sure to install and configure Nova Init using `the following instructions <https://nvidia-isaac-ros.github.io/nova/nova_init/index.html>`_. 
+
 ### Power Modes
 
 If not already setup in Max Power Mode, we recommend you do so now to be able to leverage the full power of the Jetson.
@@ -158,9 +176,9 @@ NvBlox can work well on just a single stereo camera, but cuVSLAM typically requi
 
 ## 1. Initial Setup
 
-First, we need to set up a `Isaac ROS Dev<https://nvidia-isaac-ros.github.io/getting_started/dev_env_setup.html>`_ environment using Docker, as highly recommended by NVIDIA.
+First, we need to set up a `Isaac ROS Dev <https://nvidia-isaac-ros.github.io/getting_started/dev_env_setup.html>`_ environment using Docker, as highly recommended by NVIDIA.
 
-## Tooling Setup
+### Tooling Setup
 
 .. code: bash
 
@@ -186,7 +204,7 @@ Next, we're going to clone the ``isaac_ros_common`` package which contains key e
 
 If working with a Nova Carter device, `do the following <https://nvidia-isaac-ros.github.io/robots/nova_carter/getting_started.html#repositories-setup-optional>`_ as well to setup the docker configs.
 
-## Demonstration Setup
+### Demonstration Setup
 
 We're now ready to launch the container, we can do so via:
 
@@ -211,16 +229,14 @@ Once we've obtained and setup Isaac, we can add in the ``opennav_visual_navigati
   source /opt/ros/humble/setup.bash
   colcon build --symlink-install
 
-If you'd like to make modifications for your platform, fork the ``opennav_visual_navigation`` repository, clone your fork instead.
+TODO other setup things like NGC resource or manual package install steps
 
-TODO other setup things like NGC resource or package installs
-
-## 2. Software Walkthrough
-
-TODO this is all required to work with a Nova Carter / Nova reference platform. If not, some effort is require to get it to work. The NV tooling is so specific to that you'll have a really hard time getting any of this to work otherwise (recording, launch wrappers, containers, synchronization, etc). I dont love this, but I don't know what else to do. Reformat tutorial as tech demo but not reproducable. SHould I tell NV (launch utils, nesting hardware/nav configs into it, nova tie in) its not really usable?
+## 2. Software & Workflow Walkthrough
 
 This project is contains the package ``opennav_visual_nav_demo``, which comprises the application demo leveraging Visual Navigation to perform a security patroling task.
-The demonstration leverages the Nova Carter robot, so the hardware is brought up using the ``nova_carter_bringup`` launch file ``navigation.launch.py`` and ``teleop.launch.py`` which launches the robot hardware and other nodes needed for the demonstration.
+The demonstration leverages the Nova Carter robot, so the hardware is brought up using the ` ``nova_carter_bringup`` <https://github.com/NVIDIA-ISAAC-ROS/nova_carter/tree/main/nova_carter_bringup>`_ launch file ``navigation.launch.py`` and ``teleop.launch.py`` which launches the robot hardware and other nodes needed for the demonstration.
+This has been preconfigured with Nav2, Isaac Perceptor, and is highly integrated with the Nova reference platform.
+Please reference this package for more information.
 
 To adapt to another platform, make a new `my_robot_nav` package which:
 * Launches the robot hardware drivers for accepting commands, bringing up sensors, providing transformation tree, etc
@@ -229,29 +245,30 @@ To adapt to another platform, make a new `my_robot_nav` package which:
 
 Use these launch files to replace `nova_carter_bringup/launch/navigation.launch.py` used in this package.
 
-TODO tutorial specific to nova (+nova carter?) reference platforms?
-TODO humble compatible for Jetson, but uses humble-main version for updated featureset
+The launch file ``teleop_mapping_launch.py`` is used to teleoperate the robot using a joystick to collect data for a mapping session.
+Once a dataset is created ``tools/create_map.sh`` will be used to create the SLAM map offline.
+``visual_nav_demo_launch.py`` will be used for the live localization and navigation demostration using the visual navigation capabilities.
+The demonstration application, ``patrol_application.py`` and its configurations will be discussed in a later section.
 
-TODO
-	- Adjust Nav2 params file
-	- Configure the Isaac nodes
-	- Launch file to include nodes
+Outside of the ROS package you will find the data from this run including the VSLAM map, occupancy grid map, and route graph files used in the demonstration for the space as a reference.
 
-  - TODO GIVE UP AND USE JUST NVIDIA WORK THAT DOESN'T GENERALIZE --> THE 'DEMO' IS THE APPLICATION AND SHOWING WORKING, NOT THE SETUP ITSELF?
-
-TODO
-Recommends: 3 cameras launched (front, left, right)
-            2 cameras for VSLAM
-            2 cameras (sides) for 
-
-TODO people semgnetatino is not just people, any masked segmentation will work (people just current example)
-
-YOu've made this really hard to work with and integrate using all these NV specific launch tools. I can't tell what's what and how things are parsed and stored.
+The demonstration is setup to utilize the front, left, and right stereo cameras for localization with VSLAM and 3D reconstruction using NvBlox using live use. 
+While the rear camera would also provide useful information (and is also used during the VSLAM mapping dataset), it adds additional computation beyond what the AGX Orin can handle in real-time with the present Isaac release.
+This may be improved at a future time or when using newer Jetson platforms such as the Thor.
+The 2D and 3D lidars are disabled and not used anywhere in this work.
 
 ## 3. Initial Environment Mapping
 
-TODO Using launch file ... map ... teleop ... offline process from NV. May take awhile.
-  online possible? docs seem to imply it is
+TODO teleop map
+
+TODO process (might take awhile)
+
+TODO visualize
+
+TODO route graph create + tutorial point
+
+TODO upload to the repository.
+
 
 ## 4. Navigation Testing
 
@@ -259,6 +276,7 @@ TODO Once the initial offline map is complete, we are ready to start navigating!
 
 NVBlox, visual global localizer, localization
 
+TODO video of it navigating around for the first time using all of this to go from A to B in freespace
 
 ## 5. Demonstration
 
@@ -298,10 +316,22 @@ TODO Link to the BT XML + image of it
 
 ### Configuration
 
-TODO
-MPPI, navFN to get onto graph if needed due to diff drive holonomic base (would recommend Hybrid-A* for larger things with non-circular footprint), Goal Checker, NvBlox, 
-The control will use a model predictive controller to avoid obstacles and follow the path.
-Link to the configuration file
+This is configured to use the following algorithms:
+
+=================================
+Planner:   | Route Server, NavFn
+-----------|---------------------
+Controller:| MPPI Controller
+=================================
+
+The Route Server is used for long-term planning of the route intent to achieve the goal using the navigation graph while NavFn is exclusively used to go to the first node and/or the goal pose should the starting pose or the goal pose be off the navigation graph.
+For this demonstration, no nodes or poses will be off of this graph, but it is useful to show a demonstration for how it could be used and as a backup method should it be required in exceptional situations.
+Since this is used for short term and in largely open spaces, NavFn was selected over Hybrid-A* to allow the use of the differential drive robot nature to rotate in place.
+
+The controller selected was the MPPI controller due to its superior performance in dynamic environments and with emergent behaviors due the the Model Predictive Control critic functions.
+This allows the robot to leave the graph slightly to avoid real-time obstacles, have intelligent behavior to get out of complex situations, and return to the graph when otherwise not attempting to resolve a problematic situation.
+The Goal Checker was configured with a goal tolerance of 2 PI since the route graph nodes have no orientation information to meaningfully achieve in the route graph when not using pose-based goal locations.
+This allows us to achieve the goal once the robot is within spatial tolerance to the goal, which will be achieved aligned with the last traversed edge in the graph. When the robot continues to navigate then, it will be oriented with the graph.
 
 ### Videos
 
@@ -312,7 +342,7 @@ TODO video of he demo (rviz view with graph + nvblox + camera?)
 
 ## 6. Conclusions & Extensions
 
-In this tutorial, we showed how Nav2 can be used without lidar or depth cameras to conduct vision-only navigation leveraging NVIDA's technologies (Jetson, Isaac ROS, Isaac Perceptor).
+In this tutorial, we showed how Nav2 can be used without lidar or depth cameras to conduct vision-only navigation leveraging NVIDA's technologies (Jetson, Isaac ROS, Isaac Perceptor, Nova reference platform).
 To leverage even more vision features during Visual Navigation, you can also use the Isaac SDK, ZED SDK, or other AI technologies to leverage the GPU for:
 
   * Object detection or semantic segmentation
