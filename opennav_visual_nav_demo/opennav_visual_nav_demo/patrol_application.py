@@ -225,7 +225,7 @@ class VisualNavigationPatrol(Node):
         # init_pose.pose.orientation = self.getQuad(dock_pose[2])
         # self.navigator.setInitialPose(init_pose)
         self.navigator.clearAllCostmaps()
-        self.undockRobot(dock_type='charging_dock')
+        self.undockRobot(dock_type='home_dock')
         goal = GraphNodeLocation(0, 0, 0)
 
         while rclpy.ok() and stop is False:

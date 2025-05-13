@@ -5,6 +5,12 @@ TODO
 	- [ ] Tutorial
 	- [ ] README tutorial link + video + image
 
+TODO demo
+  - [ ] Route graph generation / storage in repo
+  - [ ] Map generation / storage in repo
+  - [ ] Backport Route to Humble
+  - [ ] teleop might be automatically launched with the nova recorder for some reason
+
 # Lidar-Free, Vision-Based Navigation
 
 In this tutorial, you'll learn how to harness the power of NVIDIA Jetson platforms, `Isaac ROS <https://developer.nvidia.com/isaac/ros>`_, and `Isaac Perceptor <https://developer.nvidia.com/isaac/perceptor>`_ technologies to implement Vision-based Navigation entirely without the use of Lidars, active depth sensors, or other range-providing modalities. 
@@ -154,21 +160,23 @@ NvBlox can work well on just a single stereo camera, but cuVSLAM typically requi
 
 First, we need to set up a `Isaac ROS Dev<https://nvidia-isaac-ros.github.io/getting_started/dev_env_setup.html>`_ environment using Docker, as highly recommended by NVIDIA.
 
+## Tooling Setup
+
 .. code: bash
 
   sudo systemctl daemon-reload && sudo systemctl restart docker
   sudo apt install git-lfs
   git lfs install --skip-repo
 
-  mkdir -p  /mnt/nova_ssd/workspaces/isaac_ros-dev/src  # Or ~/workspaces/isaac_ros-dev/src if not using SSD
-  echo "export ISAAC_ROS_WS=/mnt/nova_ssd/workspaces/isaac_ros-dev/" >> ~/.bashrc  # Or ${HOME}/workspaces/isaac_ros-dev/ if not using SSD
+  mkdir -p  /mnt/nova_ssd/workspaces/isaac_ros-dev/src
+  echo "export ISAAC_ROS_WS=/mnt/nova_ssd/workspaces/isaac_ros-dev/" >> ~/.bashrc
   source ~/.bashrc
 
 This sets up Git LFS (large file storage) for downloading weights and files stored if the Isaac ROS source repositories.
 It also creates a developer workspace ``isaac_ros-dev`` either on an externally mounted SSD or on the local computer.
 It is recommended to use an externally mounted SSD to have sufficient storage to run this demonstration.
 If one is not available, replace ``/mnt/nova_ssd/workspaces/isaac_ros-dev/`` with ``${HOME}/workspaces/isaac_ros-dev/`` in the commands above.
-This also sets an environmental variable ``ISAAC_ROS_WS`` which is used to mount the workspace to the Isaac ROS containers and in other Isaac workflows.
+This also sets an environmental variable ``ISAAC_ROS_WS`` which is used to mount the workspace to the Isaac ROS containers and in other Isaac workflows, so it is important to always have that set.
 
 Next, we're going to clone the ``isaac_ros_common`` package which contains key elements of Isaac ROS, including the dockerfiles and scripts needed to run Isaac in the Dev environment.
 
@@ -176,13 +184,17 @@ Next, we're going to clone the ``isaac_ros_common`` package which contains key e
 
   cd ${ISAAC_ROS_WS}/src && git clone -b release-3.2 https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_common.git
 
-If working with a Nova CRarter device, `do the following <https://nvidia-isaac-ros.github.io/robots/nova_carter/getting_started.html#repositories-setup-optional>`_ as well to setup the docker configs.
+If working with a Nova Carter device, `do the following <https://nvidia-isaac-ros.github.io/robots/nova_carter/getting_started.html#repositories-setup-optional>`_ as well to setup the docker configs.
+
+## Demonstration Setup
 
 We're now ready to launch the container, we can do so via:
 
 .. code: bash
 
   cd ${ISAAC_ROS_WS}/src/isaac_ros_common && ./scripts/run_dev.sh
+
+TODO: Make sure the rosbag for mapping AND the output occ grid map directories are mounted to the docker container. You can add them in ${ISAAC_ROS_WS}/src/isaac_ros_common/scripts/.isaac_ros_dev-dockerargs then restart the container.
 
 Once we've obtained and setup Isaac, we can add in the ``opennav_visual_navigation`` project as a starting point.
 
@@ -205,13 +217,20 @@ TODO other setup things like NGC resource or package installs
 
 ## 2. Software Walkthrough
 
-This project is comprised of a few packages:
-  * ``opennav_visual_nav_bringup``: The bringup for the Visual Navigation using Nav2 and Isaac ROS
-  * ``opennav_visual_nav_demo``: The application demo leveraging Visual Navigation to perform a security patroling task
+TODO this is all required to work with a Nova Carter / Nova reference platform. If not, some effort is require to get it to work. The NV tooling is so specific to that you'll have a really hard time getting any of this to work otherwise (recording, launch wrappers, containers, synchronization, etc). I dont love this, but I don't know what else to do. Reformat tutorial as tech demo but not reproducable. SHould I tell NV (launch utils, nesting hardware/nav configs into it, nova tie in) its not really usable?
 
-The demonstration leverages the Nova Carter robot, so the hardware is brought up using the ``nova_carter_bringup`` launch file ``teleop.launch.py`` which launches the robot hardware.
+This project is contains the package ``opennav_visual_nav_demo``, which comprises the application demo leveraging Visual Navigation to perform a security patroling task.
+The demonstration leverages the Nova Carter robot, so the hardware is brought up using the ``nova_carter_bringup`` launch file ``navigation.launch.py`` and ``teleop.launch.py`` which launches the robot hardware and other nodes needed for the demonstration.
 
+To adapt to another platform, make a new `my_robot_nav` package which:
+* Launches the robot hardware drivers for accepting commands, bringing up sensors, providing transformation tree, etc
+* Launches Isaac Perceptor, usually via `isaac_ros_perceptor_bringup` package's `perceptor_general.launch.py` or `perceptor_rgbd.launch.py`
+* Launches Nav2 with the appropriate configurations (i.e. removed AMCL for cuVSLAM, Costmap configurations for NvBlox)
 
+Use these launch files to replace `nova_carter_bringup/launch/navigation.launch.py` used in this package.
+
+TODO tutorial specific to nova (+nova carter?) reference platforms?
+TODO humble compatible for Jetson, but uses humble-main version for updated featureset
 
 TODO
 	- Adjust Nav2 params file
@@ -280,7 +299,7 @@ TODO Link to the BT XML + image of it
 ### Configuration
 
 TODO
-MPPI, Smac Hybrid-A*, Goal Checker, NvBlox, 
+MPPI, navFN to get onto graph if needed due to diff drive holonomic base (would recommend Hybrid-A* for larger things with non-circular footprint), Goal Checker, NvBlox, 
 The control will use a model predictive controller to avoid obstacles and follow the path.
 Link to the configuration file
 
