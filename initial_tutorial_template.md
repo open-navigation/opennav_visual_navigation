@@ -195,6 +195,10 @@ It is recommended to use an externally mounted SSD to have sufficient storage to
 If one is not available, replace ``/mnt/nova_ssd/workspaces/isaac_ros-dev/`` with ``${HOME}/workspaces/isaac_ros-dev/`` in the commands above.
 This also sets an environmental variable ``ISAAC_ROS_WS`` which is used to mount the workspace to the Isaac ROS containers and in other Isaac workflows, so it is important to always have that set.
 
+TODO: Make sure the rosbag for mapping AND the output occ grid map directories are mounted to the docker container. You can add them in ${ISAAC_ROS_WS}/src/isaac_ros_common/scripts/.isaac_ros_dev-dockerargs then restart the container.
+echo -e '-v /mnt/nova_ssd/recordings:/mnt/nova_ssd/recordings' > ${ISAAC_ROS_WS}/src/isaac_ros_common/scripts/.isaac_ros_dev-dockerargs
+echo -e '-v /mnt/nova_ssd/maps:/mnt/nova_ssd/maps' > ${ISAAC_ROS_WS}/src/isaac_ros_common/scripts/.isaac_ros_dev-dockerargs
+
 Next, we're going to clone the ``isaac_ros_common`` package which contains key elements of Isaac ROS, including the dockerfiles and scripts needed to run Isaac in the Dev environment.
 
 .. code: bash
@@ -210,10 +214,6 @@ We're now ready to launch the container, we can do so via:
 .. code: bash
 
   cd ${ISAAC_ROS_WS}/src/isaac_ros_common && ./scripts/run_dev.sh
-
-TODO: Make sure the rosbag for mapping AND the output occ grid map directories are mounted to the docker container. You can add them in ${ISAAC_ROS_WS}/src/isaac_ros_common/scripts/.isaac_ros_dev-dockerargs then restart the container.
-echo -e '-v /mnt/nova_ssd/recordings:/mnt/nova_ssd/recordings' > ${ISAAC_ROS_WS}/src/isaac_ros_common/scripts/.isaac_ros_dev-dockerargs
-echo -e '-v /mnt/nova_ssd/maps:/mnt/nova_ssd/maps' > ${ISAAC_ROS_WS}/src/isaac_ros_common/scripts/.isaac_ros_dev-dockerargs
 
 Once we've obtained and setup Isaac, we can add in the ``opennav_visual_navigation`` project as a starting point.
 
