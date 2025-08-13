@@ -42,6 +42,23 @@ FAILED isaac_cloud/pfc/tests.py::test_service[nova-isaac-ota] - AssertionError
 ===================================================== 12 failed, 85 passed in 62.97s (0:01:02) =====================================================
 
 
+nova_battery_status now works as of 8/13/2025.
+nvidia@carter-v24-nav2:~/scripts$ whereis nova_battery_status
+nova_battery_status: /usr/bin/nova_battery_status
+nvidia@carter-v24-nav2:~/scripts$
+nvidia@carter-v24-nav2:~/scripts$ nova_battery_status 
+host version build date:[23-09-19]
+host version build time:[14:21:54]
+Communication interface adding CAN_INTERFACE
+Please guarantee the 'canbus_pre.sh' file has been taken into the '/home/sdcard/firmware' directory, if can register has not been configed
+HAL CANBUS init success! 
+ Scheduler Num 0 Start. Task Num = 1. Period = 100000
+Scheduler Num 1 Start. Task Num = 1. Period = 50000
+Scheduler Num 2 Start. Task Num = 1. Period = 20000
 
+battery:             92%
+charge mode:         dock
+reached max charge:  0
+connection:          1
+charging:            1
 
-nova_battery_status doesn't work/exist
