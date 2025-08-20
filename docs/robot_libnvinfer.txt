@@ -1,0 +1,34 @@
+ii  graphsurgeon-tf                                   8.6.2.3-1+cuda12.2                          arm64        GraphSurgeon for TensorRT package
+ii  libnvinfer-bin                                    10.3.0.30-1+cuda12.5                        arm64        TensorRT binaries
+ii  libnvinfer-dev                                    10.3.0.30-1+cuda12.5                        arm64        TensorRT development libraries
+ii  libnvinfer-dispatch-dev                           10.3.0.30-1+cuda12.5                        arm64        TensorRT development dispatch runtime libraries
+ii  libnvinfer-dispatch10                             10.3.0.30-1+cuda12.5                        arm64        TensorRT dispatch runtime library
+ii  libnvinfer-dispatch8                              8.6.2.3-1+cuda12.2                          arm64        TensorRT dispatch runtime library
+ii  libnvinfer-headers-dev                            10.3.0.30-1+cuda12.5                        arm64        TensorRT development headers
+ii  libnvinfer-headers-plugin-dev                     10.3.0.30-1+cuda12.5                        arm64        TensorRT plugin headers
+ii  libnvinfer-lean-dev                               10.3.0.30-1+cuda12.5                        arm64        TensorRT lean runtime libraries
+ii  libnvinfer-lean10                                 10.3.0.30-1+cuda12.5                        arm64        TensorRT lean runtime library
+ii  libnvinfer-lean8                                  8.6.2.3-1+cuda12.2                          arm64        TensorRT lean runtime library
+ii  libnvinfer-plugin-dev                             10.3.0.30-1+cuda12.5                        arm64        TensorRT plugin libraries
+ii  libnvinfer-plugin10                               10.3.0.30-1+cuda12.5                        arm64        TensorRT plugin libraries
+ii  libnvinfer-plugin8                                8.6.2.3-1+cuda12.2                          arm64        TensorRT plugin libraries
+ii  libnvinfer-samples                                10.3.0.30-1+cuda12.5                        all          TensorRT samples
+ii  libnvinfer-vc-plugin-dev                          10.3.0.30-1+cuda12.5                        arm64        TensorRT vc-plugin library
+ii  libnvinfer-vc-plugin10                            10.3.0.30-1+cuda12.5                        arm64        TensorRT vc-plugin library
+ii  libnvinfer-vc-plugin8                             8.6.2.3-1+cuda12.2                          arm64        TensorRT vc-plugin library
+ii  libnvinfer10                                      10.3.0.30-1+cuda12.5                        arm64        TensorRT runtime libraries
+ii  libnvinfer8                                       8.6.2.3-1+cuda12.2                          arm64        TensorRT runtime libraries
+ii  libnvonnxparsers-dev                              10.3.0.30-1+cuda12.5                        arm64        TensorRT ONNX libraries
+ii  libnvonnxparsers10                                10.3.0.30-1+cuda12.5                        arm64        TensorRT ONNX libraries
+ii  libnvonnxparsers8                                 8.6.2.3-1+cuda12.2                          arm64        TensorRT ONNX libraries
+ii  libnvparsers8                                     8.6.2.3-1+cuda12.2                          arm64        TensorRT parsers libraries
+ii  nvidia-tensorrt                                   6.2+b77                                     arm64        NVIDIA TensorRT Meta Package
+ii  nvidia-tensorrt-dev                               6.2+b77                                     arm64        NVIDIA TensorRT dev Meta Package
+ii  onnx-graphsurgeon                                 8.6.2.3-1+cuda12.2                          arm64        ONNX GraphSurgeon for TensorRT package
+ii  python3-libnvinfer                                10.3.0.30-1+cuda12.5                        arm64        Python 3 bindings for TensorRT standard runtime
+ii  python3-libnvinfer-dev                            10.3.0.30-1+cuda12.5                        arm64        Python 3 development package for TensorRT standard runtime
+ii  python3-libnvinfer-dispatch                       10.3.0.30-1+cuda12.5                        arm64        Python 3 bindings for TensorRT dispatch runtime
+ii  python3-libnvinfer-lean                           10.3.0.30-1+cuda12.5                        arm64        Python 3 bindings for TensorRT lean runtime
+ii  tensorrt                                          10.3.0.30-1+cuda12.5                        arm64        Meta package for TensorRT
+ii  tensorrt-libs                                     10.3.0.30-1+cuda12.5                        arm64        Meta package for TensorRT runtime libraries
+ii  uff-converter-tf                                  8.6.2.3-1+cuda12.2                          arm64        UFF converter for TensorRT package

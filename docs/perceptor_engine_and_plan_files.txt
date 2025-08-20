@@ -1,0 +1,15 @@
+root@carter-v24-nav2:/# find / -name "*.plan" -o -name "*.engine"
+/workspaces/isaac_ros-dev/ros_ws/isaac_ros_assets/models/peoplesemsegnet/optimized_deployable_shuffleseg_unet_amr_v1.0/1/model.plan
+/workspaces/isaac_ros-dev/ros_ws/isaac_ros_assets/models/peoplesemsegnet/deployable_quantized_vanilla_unet_onnx_v2.0/1/model.plan
+/workspaces/isaac_ros-dev/ros_ws/isaac_ros_assets/models/peoplenet/rsu_rs_480_640_mask/1/model.plan
+/workspaces/isaac_ros-dev/ros_ws/isaac_ros_assets/models/dnn_stereo_disparity/dnn_stereo_disparity_v4.1.0_onnx/light_ess.engine
+/workspaces/isaac_ros-dev/ros_ws/isaac_ros_assets/models/dnn_stereo_disparity/dnn_stereo_disparity_v4.1.0_onnx/ess.engine
+/workspaces/isaac_ros-dev/ros_ws/isaac_ros_assets/models/dnn_stereo_disparity/dnn_stereo_disparity_v4.1.1/light_ess.engine
+/workspaces/isaac_ros-dev/ros_ws/isaac_ros_assets/models/dnn_stereo_disparity/dnn_stereo_disparity_v4.1.1/ess.engine
+
+
+[component_container_mt-9] [MESSAGE] Chosen primary camera ids: 0 2 4
+[component_container_mt-9] [MESSAGE] Selected cameras ids for SLAM: 0 2 4
+[component_container_mt-9] IRuntime::deserializeCudaEngine: Error Code 6: API Usage Error (The engine plan file is not compatible with this version of TensorRT, expecting library version 10.7.0.23 got 
+[component_container_mt-9] ..)
+
