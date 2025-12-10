@@ -350,10 +350,15 @@ You can also launch the recording from the provided convenience script:
  Follow the guidelines outlined above and begin to drive the robot around the space. In the example above the `nova_carter_recorder` node will begin recording stereo images from the Hawk cameras integrated into the Nova Carter robot. Data will be stored in the
 `/mnt/nova_ssd/recordings`directory by default as a `rosbag2`(MCAP) file. See the full nova_carter_recorder tutorial at https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_nova/isaac_ros_nova_recorder/index.html for details on other command-line arguments that will allow storage of the mapping run to Amazon S3, etc. When you have sufficiently mapped the area, remembering to do loop closures, hit `CTRL-C`  in the terminal you launched the recording from. 
 
-> [!NOTE]
->
->  TODO: video of  joysticking
->
+
+
+ file: graphics/Loop_Closures_256.gif
+
+
+
+![](graphics/Loop_Closures_256.gif)
+
+​											The loop closure technique for mapping the space. 
 
 When you are done you should see a directory contain the MCAP file(s) in `/mnt/nova_ssd/recordings` like this:
 
@@ -452,25 +457,15 @@ Let's take a look at the `occupancy_map.png` file itself:
 
 ![polymath_map](/home/armadilo/projects/robots/carter/polymath_map.png)
 
+
+
 We'll note that this lacks the typical fine detail we're used to seeing from a LIDAR-generated occupancy grid map. This is an artifact of  image data being converted to depth data and highlights the importance of using the loop-closure techniques mentioned above when recording the visual data. Despite appearances, this map is quite sufficient for visual navigation around the space. The occupancy map is really only one layer in the whole localization stack used by the robot during visual navigation.  Isaac ROS Perceptor will also use the cuvslam_map, cuvgl_map and live image data from the cameras on the robot for localization against features in the mapped space. 
 
-> [!NOTE]
->
-> To Be Deleted 
 
-### Navigation Graph
-
-Now that we have the data analysis completed to do localization and initial global localization, we can now generate the navigation route graph used in this example.
-We will annotate the global map file with the navigation graph of routes to perform during a patrol mission.
-In this, we'll mark patrol points and connect them with directional or bidirectional edges for how the robot can achieve these patrol points on the graph.
-
-For more details, see :ref:`route_server_tools` for step-by-step instructions for how to create a graph using QGIS or a Web UX.
-
-TODO graph image
 
 ## 4. Navigation Testing
 
-Now that this initial setup is complete, we're ready to start navigating usign visual localization and collision avoidance! 
+Now that this initial setup is complete, we're ready to start navigating using visual localization and collision avoidance! 
 
 Simply run the main demonstration launch file and see it in action!
 
