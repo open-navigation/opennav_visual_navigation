@@ -9,36 +9,6 @@ TODO demo
   - [ ] Route graph, maps in repo
   - [ ] Backport Route to Humble
 
-NV feedback
-  - Too tied into NV tooling
-    - launch uses an NV wrapper that is not clear how to decipher. Also hard to integrate with as a result for anyone else.
-  - Software is too single-purpose specific
-    - None works without Nova
-    - Only works if exactly 1 workflow is followed setting env var or configs for applications (fragile)
-    - Things are nested in uninutitive ways that make it impossible for reuse. Recorder launches teleop of robot base. perceptor includes Nav2 + configs can't rip out. Hardware is launched when enabling perception stack (backwards) that make it inoperable for anyone else - can't do anything without restarting.
-    - Can't really be reapplied (at least not easily) to any other stiuation but the one NV created to make the demo
-  - Docs are twisted, interconnected and non-linear, it took me hours of back and forth to extract information and still feel like its not telling me the full story on configurations, setup, how to work with it outside of the 1 situation using the nova platform, etc
-
-Familiar Feedback
-
-- Docs indeed internecine. 
-
-- DisplayPort passthrough on robot front-panel may not be compatible with all end-user monitors. 
-
-- System should default to exposing AP mode for initial network configuration. 
-
-- Add nmcli commands for CLI-based WLAN config.
-
-- TensorRT models/engines may need to be rebuilt as a result of package version drift between the Docker images and the onboard system installed packages. 
-
-- Heavy dependencies on seemingly unrelated libraries and programs 
-
-- TBD: Try -v /etc/localtime:/etc/localtime:ro as a way to check against some of the drift problems between system and container, the launch.log for the Perceptor demo has messages about timestamps being off, cameras not in sync. 
-
-  
-
-  --> Had to change from a codebase intended as a forkable platform that folks could modify for their situation as a working demo to build off of and INSTEAD make it a technology demonstration of only the 1 situation we have with the Nova Carter to show its possible, but only in this narrow situation. Tech demo to show its possible rather than a usable platform for users to build fromf for their unique needs.
-
 # Lidar-Free, Vision-Based Navigation
 
 In this tutorial, you'll see how to use the NVIDIA Jetson, `Isaac ROS <https://developer.nvidia.com/isaac/ros>`_, `Isaac Perceptor <https://developer.nvidia.com/isaac/perceptor>`_, and `NVIDIA Nova <https://nvidia-isaac-ros.github.io/nova/index.html>`_ technologies to implement Vision-based Navigation entirely without the use of LIDARs, active depth sensors, or other range-providing modalities. 
@@ -85,12 +55,12 @@ Currently, these are solved in Lidar-based solutions using Costmap2D, a SLAM lib
 TODO diagram showing these concepts visually - with current and replacement solutions present?
 
 
-### Nvidia Technologies
+### NVIDIA Technologies
 
 NVIDIA provides the necessary technologies to replace the existing Lidar-based navigation solutions.
 This is made possible by leveraging the power of NVIDIA's GPU and the Isaac ROS & Perceptor SDKs.
 
-TODO Table for 1:1 Nvidia replaces to make this possible.
+TODO Table for 1:1 NVIDIA replaces to make this possible.
 
 **Data Acquisition**:
 
@@ -122,11 +92,15 @@ It can also accept an optional semantic segmentation mask to detect people, robo
 These dynamic obstacles are then later re-inserted at the end of the update to avoid artifacts in environmental updates related to dynamic obstacles without the need of expensive clearing logic.
 Common demonstrations show this with a particular human segmentation model, but any model may be used trained to segment out any number of object classes.
 
-NB: It may be necessary to regenerate these models in advance of doing any visual navigation or data collection/data fusion for visual navigation.  See Troubleshooting section for details on common error messages and their solutions. 
+> [!NOTE]
+>
+> It may be necessary to regenerate these models in advance of doing any visual navigation or data collection/data fusion for visual navigation.  See Troubleshooting section for details on common error messages and their solutions. 
 
-TODO
-.. image:
-  file: graphics/isaac_ros_nvblox_nodegraph.png
+
+
+> TODO
+> .. image:
+>   file: graphics/isaac_ros_nvblox_nodegraph.png
 
 The NvBlox model is hosted inside of the Costmap2D package as a Costmap Layer Plugin used to update the occupancy grid model for use in planning and control.
 Future updated to Nav2 may make it possible to use 3D environmental models natively rather than reducing dimensionality for use-cases that require 3D collision checking like mobile manipulation and traversibility estimation.
@@ -154,7 +128,7 @@ It may also be used to relocalize the robot during runtime as well, which can be
 
 TODO Chart showing the workflow for this to explain in conclusion
 
-## 0. Nvidia Jetson Setup
+## 0. NVIDIA Jetson Setup
 
 ### Jetpack
 
@@ -238,7 +212,7 @@ If one is not available or you are using a large(>1TB) internal drive change the
 
 This sets an environmental variable `ISAAC_ROS_WS`  which is used to mount the workspace to the Isaac ROS containers and in other Isaac workflows, so it is important to always have that set.
 
-*NB: The NVidia Jetson Orin and Jetson Xavier family system have an M.2 Key-M(AKA 2280) slot which provides support for an onboard NVME SSD drive. The NVidia SDKManager install tool has configuration options to flash a Jetpack image to this drive, providing high-capacity storage at PCIe speeds without the need for an external drive or MicroSD card.*  
+*NB: The NVIDIA Jetson Orin and Jetson Xavier family system have an M.2 Key-M(AKA 2280) slot which provides support for an onboard NVME SSD drive. The NVIDIA SDKManager install tool has configuration options to flash a Jetpack image to this drive, providing high-capacity storage at PCIe speeds without the need for an external drive or MicroSD card.*  
 
 TODO: Make sure the rosbag for mapping AND the output occ grid map directories are mounted to the docker container. You can add them in ${ISAAC_ROS_WS}/src/isaac_ros_common/scripts/.isaac_ros_dev-dockerargs then restart the container.
 echo -e '-v /mnt/nova_ssd/recordings:/mnt/nova_ssd/recordings' > ${ISAAC_ROS_WS}/src/isaac_ros_common/scripts/.isaac_ros_dev-dockerargs
@@ -352,11 +326,11 @@ You can also launch the recording from the provided convenience script:
 
 
 
- file: graphics/Loop_Closures_256.gif
+ file: graphics/loop_closures_demo.gif
 
 
 
-![](graphics/Loop_Closures_256.gif)
+![](graphics/loop_closures_demo.gif)
 
 ​											The loop closure technique for mapping the space. 
 
@@ -391,7 +365,7 @@ After the dataset has been collected, it must be processed to generate the cuVSL
 
 > [!WARNING]
 >
-> N.B. Starting with version 4.1.0 of the `isaac-ros-ess ` code, the plugin architecture was changed to allow for custom plugins. This means you need to explicitly provide the path to the plugins for  the models you've installed, even if they are the default ones provided by NVidia. 
+> Starting with version 4.1.0 of the `isaac-ros-ess ` code, the plugin architecture was changed to allow for custom plugins. This means you need to explicitly provide the path to the plugins for  the models you've installed, even if they are the default ones provided by NVIDIA. 
 > For the `dnn_stereo_disparity` models, installed as part of the `isaac-ros-ess-install-models` package, this looks like: 
 >
 > `'export LD_LIBRARY_PATH="/workspaces/isaac_ros-dev/ros_ws/isaac_ros_assets/models/dnn_stereo_disparity/dnn_stereo_disparity_v4.1.0_onnx/plugins/aarch64/:$LD_LIBRARY_PATH" '`
@@ -597,8 +571,6 @@ More demonstrations can be found here:
 `Error Code 6: API Usage Error (The engine plan file is not compatible with this version of TensorRT, expecting library version 10.7.0.23 got...`
 
  This error occurs when the packages on the Nova Carter host install are different from those installed on the Docker container, specifically the TensorRT and nvblox packages. More specifically, this often occurs because the Nova Carter JetPack install provides 10.3.x versions of TensorRT(tensorrt,nvinfer,etc.) and the development Docker containers use 10.7.x 
-
-The NVidia tutorials mention nvblox as a post-processing tool for processing and visualizing recorded image data but it is invoked during navigation tasks including processing live image data being streamed off the cameras on the Nova Carter. 
 
 
 See *Rebuilding TensorRT .engine files* for a step-by-step guide to fix this error. 
