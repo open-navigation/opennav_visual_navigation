@@ -1,0 +1,54 @@
+Package: nvidia-jetpack
+Source: nvidia-jetpack (6.2.1)
+Version: 6.2.1+b38
+Architecture: arm64
+Maintainer: NVIDIA Corporation
+Installed-Size: 194
+Depends: nvidia-jetpack-runtime (= 6.2.1+b38), nvidia-jetpack-dev (= 6.2.1+b38)
+Homepage: http://developer.nvidia.com/jetson
+Priority: standard
+Section: metapackages
+Filename: pool/main/n/nvidia-jetpack/nvidia-jetpack_6.2.1+b38_arm64.deb
+Size: 29300
+SHA256: dd9cb893fbe7f80d2c2348b268f17c8140b18b9dbb674fa8d79facfaa2050c53
+SHA1: dc630f213f9afcb6f67c65234df7ad5c019edb9c
+MD5sum: 9c8dc61bdab2b816dcc7cd253bcf6482
+Description: NVIDIA Jetpack Meta Package
+Description-md5: ad1462289bdbc54909ae109d1d32c0a8
+
+Package: nvidia-jetpack
+Source: nvidia-jetpack (6.2)
+Version: 6.2+b77
+Architecture: arm64
+Maintainer: NVIDIA Corporation
+Installed-Size: 194
+Depends: nvidia-jetpack-runtime (= 6.2+b77), nvidia-jetpack-dev (= 6.2+b77)
+Homepage: http://developer.nvidia.com/jetson
+Priority: standard
+Section: metapackages
+Filename: pool/main/n/nvidia-jetpack/nvidia-jetpack_6.2+b77_arm64.deb
+Size: 29298
+SHA256: 70553d4b5a802057f9436677ef8ce255db386fd3b5d24ff2c0a8ec0e485c59cd
+SHA1: 9deab64d12eef0e788471e05856c84bf2a0cf6e6
+MD5sum: 4db65dc36434fe1f84176843384aee23
+Description: NVIDIA Jetpack Meta Package
+Description-md5: ad1462289bdbc54909ae109d1d32c0a8
+
+Package: nvidia-jetpack
+Source: nvidia-jetpack (6.1)
+Version: 6.1+b123
+Architecture: arm64
+Maintainer: NVIDIA Corporation
+Installed-Size: 194
+Depends: nvidia-jetpack-runtime (= 6.1+b123), nvidia-jetpack-dev (= 6.1+b123)
+Homepage: http://developer.nvidia.com/jetson
+Priority: standard
+Section: metapackages
+Filename: pool/main/n/nvidia-jetpack/nvidia-jetpack_6.1+b123_arm64.deb
+Size: 29312
+SHA256: b6475a6108aeabc5b16af7c102162b7c46c36361239fef6293535d05ee2c2929
+SHA1: f0984a6272c8f3a70ae14cb2ca6716b8c1a09543
+MD5sum: a167745e1d88a8d7597454c8003fa9a4
+Description: NVIDIA Jetpack Meta Package
+Description-md5: ad1462289bdbc54909ae109d1d32c0a8
+

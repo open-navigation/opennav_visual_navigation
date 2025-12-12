@@ -1,0 +1,19 @@
+nova-orin-init
+ nvidia-jetpack 
+ nvidia-jetpack-dev 
+ nvidia-jetpack-runtime 
+ nvidia-tensorrt 
+ nvidia-tensorrt-dev
+ 
+ Hold a package:
+
+sudo apt-mark hold <package-name>
+
+Remove the hold:
+
+sudo apt-mark unhold <package-name>
+
+Show all packages on hold:
+
+sudo apt-mark showhold
+

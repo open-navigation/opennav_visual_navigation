@@ -1,7 +1,7 @@
 TODO
-	- [ ] Videos
-	- [ ] Demos
-	- [ ] Software configs/launch/etc
+	- [ X] Videos
+	- [ X] Demos
+	- [ X] Software configs/launch/etc
 	- [ ] Tutorial
 	- [ ] README tutorial link + video + image
 
@@ -9,21 +9,9 @@ TODO demo
   - [ ] Route graph, maps in repo
   - [ ] Backport Route to Humble
 
-NV feedback
-  - Too tied into NV tooling
-    - launch uses an NV wrapper that is not clear how to decypher. Also hard to integrate with as a result for anyone else.
-  - Software is too single-purpose specific
-    - None works without Nova
-    - Only works if exactly 1 workflow is followed setting env var or configs for applications (fragile)
-    - Things are nested in uninutitive ways that make it impossible for reuse. Recorder launches teleop of robot base. perceptor includes Nav2 + configs can't rip out. Hardware is launched when enabling perception stack (backwards) that make it inoperable for anyone else - can't do anything without restarting.
-    - Can't really be reapplied (at least not easily) to any other stiuation but the one NV created to make the demo
-  - Docs are twisted, interconnected and non-linear, it took me hours of back and forth to extract information and still feel like its not telling me the full story on configurations, setup, how to work with it outside of the 1 situation using the nova platform, etc
-  
-  --> Had to change from a codebase intended as a forkable platform that folks could modify for their situation as a working demo to build off of and INSTEAD make it a technology demonstration of only the 1 situation we have with the Nova Carter to show its possible, but only in this narrow situation. Tech demo to show its possible rather than a usable platform for users to build fromf for their unique needs.
-
 # Lidar-Free, Vision-Based Navigation
 
-In this tutorial, you'll see how to use the NVIDIA Jetson, `Isaac ROS <https://developer.nvidia.com/isaac/ros>`_, `Isaac Perceptor <https://developer.nvidia.com/isaac/perceptor>`_, and `NVIDIA Nova <https://nvidia-isaac-ros.github.io/nova/index.html>`_ technologies to implement Vision-based Navigation entirely without the use of Lidars, active depth sensors, or other range-providing modalities. 
+In this tutorial, you'll see how to use the NVIDIA Jetson, `Isaac ROS <https://developer.nvidia.com/isaac/ros>`_, `Isaac Perceptor <https://developer.nvidia.com/isaac/perceptor>`_, and `NVIDIA Nova <https://nvidia-isaac-ros.github.io/nova/index.html>`_ technologies to implement Vision-based Navigation entirely without the use of LIDARs, active depth sensors, or other range-providing modalities. 
 Instead, we'll rely solely on passive stereo cameras as the extrinsic sensing source to achieve collision avoidance, localization, and mapping — a powerful and cost-effective alternative. 
 
 This tutorial will guide you through the fundamental concepts behind vision-based navigation, explain how to configure and launch a vision-enabled Nav2 stack, and culminate in a hardware demonstration of a mobile robot performing autonomous security patrols.
@@ -67,12 +55,12 @@ Currently, these are solved in Lidar-based solutions using Costmap2D, a SLAM lib
 TODO diagram showing these concepts visually - with current and replacement solutions present?
 
 
-### Nvidia Technologies
+### NVIDIA Technologies
 
 NVIDIA provides the necessary technologies to replace the existing Lidar-based navigation solutions.
 This is made possible by leveraging the power of NVIDIA's GPU and the Isaac ROS & Perceptor SDKs.
 
-TODO Table for 1:1 Nvidia replaces to make this possible.
+TODO Table for 1:1 NVIDIA replaces to make this possible.
 
 **Data Acquisition**:
 
@@ -82,14 +70,14 @@ Sometimes post-processing is needed to remove noise or other artifacts to improv
 
 In the Vision-based navigation, we instead require more stages to obtain both the sensor data and derived results needed for 3D reconstructions to build the environmental model required for global path planning and local trajectory planning (control). 
 
-Data is first acquired via the Jetson's libargus or a sensor manufacturer provided library to obtain sensor data in a low-latency, time synchronized way to enable accurate information for Visual mapping and localization purposes.
+Data is first acquired via the Jetson's `libargus` or a sensor manufacturer provided library to obtain sensor data in a low-latency, time-synchronized way to enable accurate information for Visual mapping and localization purposes.
 This is key for good performance of a vision-based solution and many sensors are supported.
-The disperity is then estimated using Isaac's ``isaac_ros_ess``, which computes a GPU accelerated, deep-learned stereo disparity image.
+The disparity is then estimated using Isaac's ``isaac_ros_ess``, which computes a GPU accelerated, deep-learning based stereo disparity image.
 Finally, ``isaac_ros_stereo_image_proc`` converts the disparity image into a Depth Image used for later 3D reconstruction.
 
 .. note:
 
-  ```isaac_ros_stereo_image_proc`` may also compute a PointCloud2 as well if an application calls for pointcloud rather than depth image format.
+  ```isaac_ros_stereo_image_proc`` may also compute a `PointCloud2` as well if an application calls for pointcloud rather than depth image format.
 
 **Data Fusion**:
 
@@ -97,16 +85,22 @@ Once we'd obtained the depth information from the stereo pair, we can use this f
 While definitionally 3D Reconstruction methods may not require depth information from camera feeds, most modern and robust solutions require it, hence the need for the Isaac SDK's depth estimation pipeline.
 
 NVIDIA provides a great 3D Reconstruction solution called `NvBlox <https://github.com/nvidia-isaac/nvblox>`_.
-NvBlox is a GPU accelerated signed-distance field library which can be used to generate environmental models using voxel grids.
+`NvBlox` is a GPU accelerated signed-distance field library which can be used to generate environmental models using voxel grids.
 This can take in multiple depth images from stereo camera pairs and populate a 3D environmental representation.
 
 It can also accept an optional semantic segmentation mask to detect people, robots, or other dynamic objects in the scene to remove them from the environmental model's update.
 These dynamic obstacles are then later re-inserted at the end of the update to avoid artifacts in environmental updates related to dynamic obstacles without the need of expensive clearing logic.
 Common demonstrations show this with a particular human segmentation model, but any model may be used trained to segment out any number of object classes.
 
-TODO
-.. image:
-  file: graphics/isaac_ros_nvblox_nodegraph.png
+> [!NOTE]
+>
+> It may be necessary to regenerate these models in advance of doing any visual navigation or data collection/data fusion for visual navigation.  See Troubleshooting section for details on common error messages and their solutions. 
+
+
+
+> TODO
+> .. image:
+>   file: graphics/isaac_ros_nvblox_nodegraph.png
 
 The NvBlox model is hosted inside of the Costmap2D package as a Costmap Layer Plugin used to update the occupancy grid model for use in planning and control.
 Future updated to Nav2 may make it possible to use 3D environmental models natively rather than reducing dimensionality for use-cases that require 3D collision checking like mobile manipulation and traversibility estimation.
@@ -115,17 +109,16 @@ This removes the need to work with a Voxel Layer, Spatio-Temporal Voxel Layer, O
 
 **Mapping**:
 
-Mapping is crutial for long-term planning to understand the environment and know how to navigate from a given point to any other point in a space most optimally.
+Mapping is crucial for long-term planning to understand the environment and know how to navigate from a given point to any other point in a space most optimally.
 While short-term navigation tasks with immediate visibility of the space may not require a pre-built map, most practically deployed applications require either (1) time-optimal execution and cannot get lost attempting to navigate down incorrect areas that will not lead to a solution or (2) operate in large spaces where the target poses are not commonly visible from current sensor data to establish a route to the goal.
 
 `cuVSLAM <https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_visual_slam/index.html>`_ is used for visual SLAM (VSLAM) to create and save a map of the environment from sensor data.
 This is a pure visual mapping solution that uses only stereo camera images and IMU data to map the environment using stereo feature matching.
-Due to the computational demands of the mapping process on moderately large spaces, this is completed offline from a teleoperated data collection run.
-This fully replaces 2D, 3D, or other types of Lidar-SLAM.
+Due to the computational demands of the mapping process on moderately large spaces, this is completed offline from a teleoperated data collection run. This fully replaces 2D, 3D, or other types of Lidar-SLAM.
 
 **Localization**:
 
-cuVSLAM is also used for run-time pure localization within the feature map generated during the mapping run.
+`cuVSLAM` is also used for run-time pure localization within the feature map generated during the mapping run.
 This can run in excess of 30 fps with 4 stereo camera pairs, or even faster with fewer on the Jetson AGX Orin.
 
 Additionally, a utility that Isaac ROS SDK provides, Visual Global Localization (cuVGL), is used to identify the initial starting pose in a localization run when one is not already previously known.
@@ -135,7 +128,7 @@ It may also be used to relocalize the robot during runtime as well, which can be
 
 TODO Chart showing the workflow for this to explain in conclusion
 
-## 0. Nvidia Jetson Setup
+## 0. NVIDIA Jetson Setup
 
 ### Jetpack
 
@@ -156,8 +149,26 @@ If not already setup, make sure to install and configure Nova Init using `the fo
 ### Power Modes
 
 If not already setup in Max Power Mode, we recommend you do so now to be able to leverage the full power of the Jetson.
-If in a highly power constrained application, consider which power setting make most sense for your power resources, compute requirements, and application duration.
-Revisit this after the demonstration to optimize for your requirements and power needs.
+ Power Mode settings are accessed and controlled with the `nvpmodel` command and the CPU/GPU clock settings are controlled via `jetsonclocks` . The following commands will set the Jetson to Max Power Mode with the CPU/GPU clocks set to maximum performance as well. 
+
+Set CPU/GPU clocks to maximum:
+`sudo /usr/bin/jetson_clocks`
+
+Set Max Power Mode for power consumption:
+` sudo nvpmodel -m 2`
+
+Confirm settings by running:
+
+` sudo /usr/bin/jetson_clocks --show|tail -1`
+
+`sudo /usr/bin/nvpmodel -q|head -1`
+
+Both of these commands should return the output:
+**NV Power Mode: MAXN_SUPER**
+
+Details on power consumption, CPU/GPU frequencies, cooling fan speeds, etc. can be found at https://docs.nvidia.com/jetson/archives/r35.1/DeveloperGuide/text/SD/PlatformPowerAndPerformance/JetsonOrinNxSeriesAndJetsonAgxOrinSeries.html
+
+Users with a power constrained application, should  consider which power setting make most sense for your power resources, compute requirements, and application duration. Revisit this after the demonstration to optimize for your requirements and power needs.
 
 ### Compatible Cameras
 
@@ -179,21 +190,31 @@ First, we need to set up a `Isaac ROS Dev <https://nvidia-isaac-ros.github.io/ge
 
 ### Tooling Setup
 
-.. code: bash
+.This can be run as a single block of commands or one at a time in a Linux shell:
 
-  sudo systemctl daemon-reload && sudo systemctl restart docker
+  ```sudo systemctl daemon-reload && sudo systemctl restart docker
   sudo apt install git-lfs
   git lfs install --skip-repo
-
   mkdir -p  /mnt/nova_ssd/workspaces/isaac_ros-dev/src
-  echo "export ISAAC_ROS_WS=/mnt/nova_ssd/workspaces/isaac_ros-dev/" >> ~/.bashrc
-  source ~/.bashrc
+    echo "export ISAAC_ROS_WS=/mnt/nova_ssd/workspaces/isaac_ros-dev/" >> ~/.bashrc
+    source ~/.bashrc```
+  ```
 
-This sets up Git LFS (large file storage) for downloading weights and files stored if the Isaac ROS source repositories.
+This sets up Git LFS (large file storage) for downloading weights and files stored in the Isaac ROS source repositories.
 It also creates a developer workspace ``isaac_ros-dev`` either on an externally mounted SSD or on the local computer.
-It is recommended to use an externally mounted SSD to have sufficient storage to run this demonstration.
-If one is not available, replace ``/mnt/nova_ssd/workspaces/isaac_ros-dev/`` with ``${HOME}/workspaces/isaac_ros-dev/`` in the commands above.
-This also sets an environmental variable ``ISAAC_ROS_WS`` which is used to mount the workspace to the Isaac ROS containers and in other Isaac workflows, so it is important to always have that set.
+It is recommended to use an externally mounted SSD or NVME drive to have sufficient storage to run this demonstration.
+
+For an external drive, use:
+`echo "export ISAAC_ROS_WS=/mnt/nova_ssd/workspaces/isaac_ros-dev/" >> ~/.bashrc`
+
+If one is not available or you are using a large(>1TB) internal drive change the line to:
+`echo "export ISAAC_ROS_WS=/home/${USER}/workspaces/isaac_ros-dev/" >> ~/.bashrc`
+
+This sets an environmental variable `ISAAC_ROS_WS`  which is used to mount the workspace to the Isaac ROS containers and in other Isaac workflows, so it is important to always have that set.
+
+> [!NOTE]
+>
+> *The NVIDIA Jetson Orin and Jetson Xavier family system have an M.2 Key-M(AKA 2280) slot which provides support for an onboard NVME SSD drive. The NVIDIA SDKManager install tool has configuration options to flash a Jetpack image to this drive, providing high-capacity storage at PCIe speeds without the need for an external drive or MicroSD card.*  
 
 TODO: Make sure the rosbag for mapping AND the output occ grid map directories are mounted to the docker container. You can add them in ${ISAAC_ROS_WS}/src/isaac_ros_common/scripts/.isaac_ros_dev-dockerargs then restart the container.
 echo -e '-v /mnt/nova_ssd/recordings:/mnt/nova_ssd/recordings' > ${ISAAC_ROS_WS}/src/isaac_ros_common/scripts/.isaac_ros_dev-dockerargs
@@ -218,9 +239,9 @@ We're now ready to launch the container, we can do so via:
 Once we've obtained and setup Isaac, we can add in the ``opennav_visual_navigation`` project as a starting point.
 
 .. code: bash
-  # Clones the project and creates a colcon_ws relative to your pat 
+  # Clones the project and creates a colcon_ws relative to your path
   cd ${ISAAC_ROS_WS}/src && git clone git@github.com:open-navigation/opennav_visual_navigation.git
-  
+
   # Obtains dependencies
   rosdep init  # If not previously initialized
   rosdep update
@@ -266,10 +287,14 @@ The first step is to generate a dataset to create the VSLAM map during offline p
 When working in realistically large spaces, this cannot be done on the Jetson in real-time, so it is necessary to teleoperate the robot for the initial mapping session rather than completed in real-time.
 
 Tips and Tricks:
+
   * Start datasets with 10 seconds at the starting pose before moving the robot so it may be used in the future for localization testing
+  * Teleop the robot into a clear space before starting recording, ensure it is not docked and the cameras are not obstructed by a wall, furniture, etc. 
+    This ensures the starting data will contain features that can be processed later. 
   * For each 5x5m area, drive for around 1 minute
   * Drive in closed loops and make sure to capture data at more than one angle (i.e. drive in different directions to obtain different viewpoints)
-  * Don't drive for a long time in a straight line, loop back to create loop closures
+  * Don't drive for a long time in a straight line, weave and swerve. 
+  * There's a technique to making a good VSLAM map, it might take you a few tries to get good results. 
 
 TODO
 .. image:
@@ -279,56 +304,169 @@ TODO
 When ready, inside of the docker image from before, run the following and joystick your robot through the space:
 
 .. code: bash
+The full command-line for this is:
 
-    ros2 launch opennav_visual_nav_demo teleop_mapping_launch.py
+     ros2 launch isaac_ros_nova_recorder nova_recorder.launch.py \
+        config:=nova-carter_hawk-4_imu \
+        headless:=True
 
-TODO video joysticking
+This will launch the `isaac_ros_nova_recorder` node, which wraps `isaac_ros_data_recorder`, and a teleop node from the `nova_carter_bringup` package.  You can also launch the recording from the provided convenience script in the host environment:
+`./scripts/run_docker_nova_recorder.sh` 
+
+
+
+> [!NOTE]
+>
+> The `config` parameter is used to specify the set of sensors to use during mapping. The `nova-carter_hawk-4_imu` config uses only the 4 stereo cameras in the front of the Nova Carter robot, plus the onboard IMU. If you do not have the Hawk cameras or wish to use other sensors, you can check out the other configs under `/etc/nova` . Using additional sensors will result in a larger `rosbag2` recording and could result in a significantly longer post-processing time.  
+>
+> More details on the available configs can be found here:
+>
+> https://nvidia-isaac-ros.github.io/v/release-3.1/repositories_and_packages/isaac_ros_nova/isaac_ros_data_recorder/index.html#try-more-examples
+
+
+
+ Follow the guidelines outlined above and begin to drive the robot around the space. In the example above the `nova_carter_recorder` node will begin recording stereo images from the Hawk cameras integrated into the Nova Carter robot. Data will be stored in the
+`/mnt/nova_ssd/recordings`directory by default as a `rosbag2`(MCAP) file. See the full nova_carter_recorder tutorial at https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_nova/isaac_ros_nova_recorder/index.html for details on other command-line arguments that will allow storage of the mapping run to Amazon S3, etc. When you have sufficiently mapped the area, remembering to do loop closures, hit `CTRL-C`  in the terminal you launched the recording from. 
+
+
+
+ file: graphics/loop_closures_demo.gif
+
+
+
+![](graphics/loop_closures_demo.gif)
+
+​											The loop closure technique for mapping the space. 
+
+When you are done you should see a directory contain the MCAP file(s) in `/mnt/nova_ssd/recordings` like this:
+
+`nvidia@carter-v24-nav2:/mnt/nova_ssd/recordings$ ls -l`
+`total 5612708`
+`drwxr-xr-x  2 root   root         4096 Sep 14 18:15 2025-09-15_01-07-21_rosbag2`
+`drwxr-xr-x  2 root   root         4096 Sep 16 10:14 2025-09-16_17-13-45_rosbag2`
+`drwxr-xr-x  2 root   root         4096 Sep 16 10:25 2025-09-16_17-14-57_rosbag2`
+
+`[...]`
+
+Be aware that the recording files can be quite large, even for a short run:
+`nvidia@carter-v24-nav2:/mnt/nova_ssd/recordings$ du -ah -d 1 2025-09-16_17-14-57_rosbag2`
+`16K     2025-09-16_17-14-57_rosbag2/metadata.yaml`
+`18G     2025-09-16_17-14-57_rosbag2/2025-09-16_17-14-57_rosbag2_0.mcap`
+`18G     2025-09-16_17-14-57_rosbag2`
+`nvidia@carter-v24-nav2:/mnt/nova_ssd/recordings$`
 
 ### Data Processing
 
-After the dataset has been collected, it can be post-processed to generate the cuVSLAM map for localization and cuVGL map used for initial global localization. It can be done via ``./tools/create_map.sh <PATH_TO_ROSBAG> <PATH_TO_OUTPUT_FOLDER>``. For example using the recommended directories:
+After the dataset has been collected, it must be processed to generate the cuVSLAM map for localization and cuVGL map used for initial global localization.  It can be done via ``./tools/create_map.sh <PATH_TO_ROSBAG> <PATH_TO_OUTPUT_FOLDER>``. For example using the recommended directories:
 
 .. code: bash
 
-    ./create_map.sh /mnt/nova_ssd/recordings/my_recorded_data.bag /mnt/nova_ssd/maps
+    'export LD_LIBRARY_PATH="/workspaces/isaac_ros-dev/ros_ws/isaac_ros_assets/models/dnn_stereo_disparity/dnn_stereo_disparity_v4.1.0_onnx/plugins/aarch64/:$LD_LIBRARY_PATH" '
+    
+    ros2 run isaac_mapping_ros create_map_offline.py --sensor_data_bag=/mnt/nova_ssd/recordings/<RECORDED_BAG_NAME> \ `
+    --base_output_folder=/mnt/nova_ssd/recordings/maps \ `
+     --print_mode all --steps_to_run edex,cuvslam,cuvgl`
 
-TODO you should see .... output / files. PICTURES of directory/files to explain.
+> [!WARNING]
+>
+> Starting with version 4.1.0 of the `isaac-ros-ess ` code, the plugin architecture was changed to allow for custom plugins. This means you need to explicitly provide the path to the plugins for  the models you've installed, even if they are the default ones provided by NVIDIA. 
+> For the `dnn_stereo_disparity` models, installed as part of the `isaac-ros-ess-install-models` package, this looks like: 
+>
+> `'export LD_LIBRARY_PATH="/workspaces/isaac_ros-dev/ros_ws/isaac_ros_assets/models/dnn_stereo_disparity/dnn_stereo_disparity_v4.1.0_onnx/plugins/aarch64/:$LD_LIBRARY_PATH" '`
+>
+> Not setting this will cause the depth and occupancy_map generation steps to fail. 
 
-To create the data for cuVGL, we need to perform 2 steps. First, to extract features from the dataset and finally create the global localization map.
-For this, we will use ``./tools/create_vgl_map.sh <PATH_TO_SENSOR_ROSBAG> <PATH_TO_POSE_ROSBAG> <PATH_TO_OUTPUT_FOLDER>`` with example below.
+When finished, you should see something like the output below: 
 
-.. code: bash
+```
+nvidia@carter-v24-nav2:/mnt/nova_ssd/recordings/maps$ ls -l 2025-11-13_04-02-21_2025-11-13_02-54-48_rosbag2/
+total 68
+drwxr-xr-x  5 nvidia nvidia  4096 Nov 13 16:55 cuvgl_map
+drwxr-xr-x  2 nvidia nvidia  4096 Nov 12 23:11 cuvslam_map
+drwxr-xr-x 10 nvidia nvidia  4096 Nov 12 23:16 edex
+drwxr-xr-x  2 nvidia nvidia  4096 Nov 13 00:40 logs
+drwxr-xr-x  2 nvidia nvidia  4096 Nov 12 23:12 poses
+nvidia@carter-v24-nav2:/mnt/nova_ssd/recordings/maps$
+```
 
-    ./create_vgl_map.sh /mnt/nova_ssd/recordings/my_recorded_data.bag /mnt/nova_ssd/maps
+  This step may take some time(up to several hours depending on the length of your recording) and will use the full compute power of the Jetson. It is recommended to not have other workloads on the Jetson while this is processing. 
 
-TODO you should see .... output / files. PICTURES of map.
-TODO pose topic in script, the directories to use, etc.
+### Final results
 
-.. note:
+Once all the scripts have run to completion, your final directory contents should look something like this:
 
-  This step may take some time and use the full compute power of the Jetson. It is recommended to not have other workloads on the Jetson while this is processing (and may want to take a lunch break).
+```
+nvidia@carter-v24-nav2:/mnt/nova_ssd/recordings/maps$ ls -l 2025-11-13_04-02-21_2025-11-13_02-54-48_rosbag2/
+total 68
+drwxr-xr-x  5 nvidia nvidia  4096 Nov 13 16:55 cuvgl_map
+drwxr-xr-x  2 nvidia nvidia  4096 Nov 12 23:11 cuvslam_map
+drwxr-xr-x 10 nvidia nvidia  4096 Nov 12 23:16 edex
+drwxr-xr-x  2 nvidia nvidia  4096 Nov 26 00:40 logs
+drwxr-xr-x  4 nvidia nvidia  4096 Nov 12 23:21 map_frames
+-rw-r--r--  1 nvidia nvidia    93 Nov 26 00:40 metadata.yaml
+-rw-r--r--  1 root   root   17267 Nov 26 01:07 occupancy_map.png
+-rw-r--r--  1 root   root     134 Nov 26 01:07 occupancy_map.yaml
+drwxr-xr-x  2 nvidia nvidia  4096 Nov 12 23:12 poses
+nvidia@carter-v24-nav2:/mnt/nova_ssd/recordings/maps$
 
-### Navigation Graph
 
-Now that we have the data analysis completed to do localization and initial global localization, we can now generate the navigation route graph used in this example.
-We will annotate the global map file with the navigation graph of routes to perform during a patrol mission.
-In this, we'll mark patrol points and connect them with directional or bidirectional edges for how the robot can achieve these patrol points on the graph.
+```
 
-For more details, see :ref:`route_server_tools` for step-by-step instructions for how to create a graph using QGIS or a Web UX.
+Explanation:
 
-TODO graph image
+- `cuvgl_map` - Contains Visual Global Localization database used with the `cuvslam_map` including Visual Bag Of Words(VBOW) data, etc. 
+- `cuvslam_map` - Contains VSLAM map
+- `edex` - camera intrinsics and frame metadata
+- `depth` - depth maps generated by isaac_ros_dnn_stereo_disparity DNN models and the ESS plugin
+- `map_frames` - recorded camera topic data broken out into individual frames on a per-camera basis, including raw and depth images. 
+- `poses` - pose database
+
+We see that in addition to the populated map directories, we have an `occupancy_map.png` and `occupancy_map.yaml` file. These will be useful for the point-to-point VSLAM navigation. The YAML file should reference the PNG file and look like a typical 2D ROS map metadata file:
+
+`image: "occupancy_map.png"`
+`mode: "trinary"`
+`resolution: 0.05`
+`origin: [-20.8, -16, 0]`
+`negate: 0`
+`occupied_thresh: 0.65`
+`free_thresh: 0.25`
+
+Let's take a look at the `occupancy_map.png` file itself:
+
+![polymath_map](/home/armadilo/projects/robots/carter/polymath_map.png)
+
+
+
+We'll note that this lacks the typical fine detail we're used to seeing from a LIDAR-generated occupancy grid map. This is an artifact of  image data being converted to depth data and highlights the importance of using the loop-closure techniques mentioned above when recording the visual data. Despite appearances, this map is quite sufficient for visual navigation around the space. The occupancy map is really only one layer in the whole localization stack used by the robot during visual navigation.  Isaac ROS Perceptor will also use the cuvslam_map, cuvgl_map and live image data from the cameras on the robot for localization against features in the mapped space. 
+
+
 
 ## 4. Navigation Testing
 
-Now that this initial setup is complete, we're ready to start navigating usign visual localization and collision avoidance! 
+Now that this initial setup is complete, we're ready to start navigating using visual localization and collision avoidance! 
 
 Simply run the main demonstration launch file and see it in action!
 
 .. code: bash
-  
+
     ros2 launch opennav_visual_nav_demo visual_nav_demo_launch.py
-    
+
+> [!NOTE]
+>
+> This wraps the larger command:
+> `ros2 launch nova_carter_bringup perceptor.launch.py use_foxglove_whitelist:=false stereo_camera_configuration:=front_left_right_configuration disable_vgl:=False vslam_load_map_folder_path:=$vslam_dir vgl_map_dir:=$vgl_dir occupancy_map_yaml_file:=$occupancy_map_path vslam_enable_slam:=True`
+>
+> Running this will require the user to attach to the container from a separate terminal and run:
+>
+> `ros2 launch nav2_bringup navigation_launch.py` 
+>
+> to launch Nav2. NVIDIA provides its own VSLAM stack, so Nav2 is not launched by default. 
+
 TODO video of it navigating around for the first time using all of this to go from A to B in freespace
+
+[]: https://drive.google.com/file/d/1-p19A6RWov4SW0B3nbSD4VbTo_S2IvU4/view?usp=drive_link	"VSLAM Navigation, First Steps"
+
+
 
 ## 5. Demonstration
 
@@ -336,7 +474,7 @@ TODO video of it navigating around for the first time using all of this to go fr
 
 The demonstration uses the new (as of May 2025) feature: Nav2 Route Server.
 This uses a pre-defined graph of nodes and edges to use for long-range routing rather than global planning through a space.
-This can be usefulf for spaces that are too large to map, too large to realistically represent with a dense environmental model, applications where determinisim in routing is necessary, or applications where its important to limit where the robot is allowed to navigate (lanes, zones, etc).
+This can be useful for spaces that are too large to map, too large to realistically represent with a dense environmental model, applications where determinisim in routing is necessary, or applications where its important to limit where the robot is allowed to navigate (lanes, zones, etc).
 
 The visual navigation demonstration uses the route server to patrol a space using this route graph.
 We select a random node for demonstration purposes to allow the robot to navigate across the space frequently, but a structured policy could easily be created to optimize the patrol routing and task completion for specific applicaitons.
@@ -387,7 +525,7 @@ This allows us to achieve the goal once the robot is within spatial tolerance to
 
 ### Videos
 
-TODO video of the demo (roobt view)
+TODO video of the demo (robot view)
 
 TODO video of he demo (rviz view with graph + nvblox + camera?)
 
@@ -398,6 +536,8 @@ In this tutorial, we showed how Nav2 can be used without lidar or depth cameras 
 To leverage even more vision features during Visual Navigation, you can also use the Isaac SDK, ZED SDK, or other AI technologies to leverage the GPU for:
 
   * Object detection or semantic segmentation
+    * `isaac-ros-peoplenet` and `isaac-ros-peoplesemsegnet` for person recognition and semantic segmentation of people from mapped spaces. 
+
   * Ground or freespace segmentation
   * Explore other VSLAM, VIO, or 3D Mapping technologies
 
@@ -406,11 +546,22 @@ To leverage even more vision features during Visual Navigation, you can also use
 More detailed information can be found in the following documentation:
 
 * `Isaac ROS Visual SLAM <https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_visual_slam/isaac_ros_visual_slam/index.html>`_
+
 * `Isaac ROS NvBlox <https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_nvblox/index.html>`_
+
 * `Isaac ROS Visual GLobal Localization <https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_mapping_and_localization/isaac_ros_visual_global_localization/index.html>`_
+
+* `Disparity Mapping & Image Fusion with Isaac ROS DNN ESS <https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_dnn_stereo_depth/index.html>`
+
 * `Isaac ROS Stereo Image Proc <https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_image_pipeline/isaac_ros_stereo_image_proc/index.html>`_
+
 * `Isaac Perceptor <https://nvidia-isaac-ros.github.io/reference_workflows/isaac_perceptor/index.html>`_
+
 * `Isaac ROS Mapping <https://nvidia-isaac-ros.github.io/repositories_and_packages/isaac_ros_mapping_and_localization/isaac_mapping_ros/index.html>`_
+
+* `Nvidia TensorRT - CUDA Accelerated TensorFlow https://developer.nvidia.com/tensorrt`
+
+  
 
 Related GitHub repositories can be found here:
 
@@ -427,14 +578,96 @@ More demonstrations can be found here:
 * `Tutorial: Autonomous Navigation with Isaac Perceptor and Nav2 on the Nova Carter <https://nvidia-isaac-ros.github.io/reference_workflows/isaac_perceptor/tutorials_on_carter/demo_navigation.html>`_
 
 
-TODO:
-    export RECORDINGS_FOLDER=/mnt/nova_ssd/recordings
-    export MAPS_FOLDER=/mnt/nova_ssd/maps
-    docker pull nvcr.io/nvidia/isaac/nova_carter_bringup:release_3.2-aarch64
-    docker run --privileged --network host \
-      -v /dev/*:/dev/* \
-      -v /tmp/argus_socket:/tmp/argus_socket \
-      -v /etc/nova:/etc/nova \
-      -v $RECORDINGS_FOLDER:$RECORDINGS_FOLDER -v $MAPS_FOLDER:$MAPS_FOLDER \
-      nvcr.io/nvidia/isaac/nova_carter_bringup:release_3.2-aarch64 \
-      ros2 launch nova_carter_bringup perceptor.launch.py stereo_camera_configuration:=front_left_right_configuration disable_vgl:=False vslam_load_map_folder_path:=<PATH_TO_MAP_FOLDER>/cuvslam_map/ vgl_map_dir:=<PATH_TO_MAP_FOLDER>/cuvgl_map/ occupancy_map_yaml_file:=<PATH_TO_MAP_FOLDER>/occupancy_map.yaml vslam_enable_slam:=True
+
+### Troubleshooting:
+
+#### Isaac Perceptor API Usage Errors
+
+`Error Code 6: API Usage Error (The engine plan file is not compatible with this version of TensorRT, expecting library version 10.7.0.23 got...`
+
+ This error occurs when the packages on the Nova Carter host install are different from those installed on the Docker container, specifically the TensorRT and nvblox packages. More specifically, this often occurs because the Nova Carter JetPack install provides 10.3.x versions of TensorRT(tensorrt,nvinfer,etc.) and the development Docker containers use 10.7.x 
+
+
+See *Rebuilding TensorRT .engine files* for a step-by-step guide to fix this error. 
+
+`Error Code 4: API Usage Error`
+
+This error should be avoided as part of the engine regeneration solution to the `Error Code 6:`
+issue. In case it still occurs, the problem is related to how trtexec generated the new .engine and .plan file.
+By default trtexec will generate a "lean" .engine runtime model.  A "full" runtime model is necessary for the dnn_stereo_disparity node to  run successfully.   
+
+#### Library Path Errors:
+
+`"ess_engine_x.so: No such file or directory": `
+This is a Library pathing problem on the Docker container that `isaac_ros_mapping:`  may throw. 
+In the Docker startup/entrypoint script, set LD_LIBRARY to include the `$ISAAC_ROS_WS/isaac_ros_assets` path as part of LD_LIBRARY_PATH *or* prepend it to the launch script when processing data recorded by `isaac_nova_recorder`. A one-llne fix for this error looks like:
+
+```
+LD_LIBRARY_PATH="/workspaces/isaac_ros-dev/ros_ws/isaac_ros_assets/models/dnn_stereo_disparity/dnn_stereo_disparity_v4.1.0_onnx/plugins/aarch64/:$LD_LIBRARY_PATH" \
+ros2 run isaac_mapping_ros create_map_offline.py \
+--sensor_data_bag=/mnt/nova_ssd/recordings/<PATH_TO_RECORDED_DATA>/ \
+--base_output_folder=/mnt/nova_ssd/recordings/maps/
+```
+
+This has also been observed to affect depth and occupancy map generation, with the resulting error as the isaac_ros_dnn_disparity
+
+
+#### Troubleshooting map generation:
+
+By default the  `./tools/create_map.sh`  script may fail to generate all stages of the map for a number of reasons. If this crashes repeatedly for you, one workaround is to generate the map data needed for VSLAM piecewise. 
+
+If, for example, you are running into errors generating the depth and occupancy_map data, you can skip around these and generate the cuvgl and cuvslam assets like so:
+
+..code:bash
+
+```
+`ros2 run isaac_mapping_ros create_map_offline.py --sensor_data_bag=/mnt/nova_ssd/recordings/<path_to_recorded_bag_file/ \
+--steps_to_run edex cuvslam map_frames cuvgl`
+```
+
+If you wanted to pick up the process using the existing data and (re)generate the cuvslam dataset you could run:
+
+..code:bash
+
+```ros2 run isaac_mapping_ros create_map_offline.py --sensor_data_bag=/mnt/nova_ssd/recordings/<path_to_recorded_bag_file>/ \`
+ --map_dir=/mnt/nova_ssd/recordings/maps/<path_to_partial_map_dir>/ --steps_to_run cuvslam``
+
+
+
+ Most of the tools used by `./tools/create_map.sh` can be found in the Docker container under `/opt/ros/humble/lib/isaac_mapping_ros`:
+and run individually if necessary. 
+
+```
+`root@carter-v24-nav2:/opt/ros/humble/lib/isaac_mapping_ros# ls -l`
+`total 7080`
+`-rwxr-xr-x 1 root root  100512 Jul 10 00:17 camera_frame_selection`
+`-rwxr-xr-x 1 root root  112816 Jul 10 00:17 copy_image_dir_main`
+`-rwxr-xr-x 1 root root    7099 Jul 10 00:15 create_cuvgl_map.py`
+`-rwxr-xr-x 1 root root   17072 Jul 10 00:15 create_map_offline.py`
+`-rwxr-xr-x 1 root root  116912 Jul 10 00:17 decode_video`
+`-rwxr-xr-x 1 root root  121016 Jul 10 00:17 mapping_pose_to_rosbag`
+`-rwxr-xr-x 1 root root 5233656 Jul 10 00:17 optimize_vo_with_keyframe_pose_main`
+`-rwxr-xr-x 1 root root   67680 Jul 10 00:17 rosbag_poses_to_tum_format`
+`-rwxr-xr-x 1 root root 1129064 Jul 10 00:17 rosbag_to_mapping_data`
+`-rwxr-xr-x 1 root root   18543 Jul 10 00:15 run_ess_ros_offline.py`
+`-rwxr-xr-x 1 root root   43304 Jul 10 00:17 run_nvblox`
+`-rwxr-xr-x 1 root root    4001 Jul 10 00:15 run_rosbag_to_mapping_data.py`
+`-rwxr-xr-x 1 root root  112856 Jul 10 00:17 select_frames_meta`
+`-rwxr-xr-x 1 root root  141512 Jul 10 00:17 update_keyframe_pose_main`
+`root@carter-v24-nav2:/opt/ros/humble/lib/isaac_mapping_ros#`
+```
+
+
+
+These are covered extensively in the NVIdia tutorial https://nvidia-isaac-ros.github.io/reference_workflows/isaac_perceptor/tutorial_mapping_and_localization.html#creating-maps
+
+
+
+
+
+
+
+
+
+
+

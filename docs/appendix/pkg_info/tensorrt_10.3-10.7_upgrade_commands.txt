@@ -1,0 +1,17 @@
+ 1159  sudo apt-get install --dry-run --only-upgrade tensorrt=10.7.0.23-1+cuda12.6
+ 1299  sudo apt-get install --only-upgrade tensorrt=10.7.0.23-1+cuda12.6
+ 1310  sudo apt-get install --only-upgrade libnvinfer10=10.7.0.23-1+cuda12.6 libnvinfer-dev=10.7.0.23-1+cuda12.6
+ 1311  sudo apt-get install --only-upgrade libnvinfer10=10.7.0.23-1+cuda12.6 libnvinfer-dev=10.7.0.23-1+cuda12.6 libnvinfer-headers-dev=10.7.0.23-1+cuda12.6
+ 1315  sudo apt-get install --only-upgrade libnvinfer-dispatch10=10.7.0.23-1+cuda12.6 libnvinfer-lean10=10.7.0.23-1+cuda12.6 libnvinfer-lean10=10.7.0.23-1+cuda12.6 python3-libnvinfer-dispatch=10.7.0.23-1+cuda12.6 python3-libnvinfer-lean=10.7.0.23-1+cuda12.6
+ 1323  sudo apt-get install --only-upgrade python3-libnvinfer=10.7.0.23-1+cuda12.6
+ 1324  sudo apt-get install python3-libnvinfer=10.7.0.23-1+cuda12.6
+ 1326  sudo apt-get install --only-upgrade libnvinfer-vc-plugin10=10.7.0.23-1+cuda12.6
+ 1327  sudo apt-get install python3-libnvinfer=10.7.0.23-1+cuda12.6
+ 1332  sudo apt-get install libnvonnxparsers10=10.7.0.23-1+cuda12.6
+ 1334  sudo apt-get install python3-libnvinfer=10.7.0.23-1+cuda12.6
+ 1337  sudo apt-get install tensorrt=10.7.0.23-1+cuda12.6
+ 1341  sudo apt-get install tensorrt=10.7.0.23-1+cuda12.6
+ 1352  sudo apt-get install libnvinfer-bin=10.7.0.23-1+cuda12.6
+ 1360  sudo apt-get install libnvinfer-lean-dev=10.7.0.23-1+cuda12.6
+ 1362  sudo apt-get install libnvinfer-headers-plugin-dev=10.7.0.23-1+cuda12.6
+ 1363  sudo apt-get install libnvinfer-plugin-dev=10.7.0.23-1+cuda12.6
