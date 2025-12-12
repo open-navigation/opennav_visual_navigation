@@ -239,7 +239,7 @@ We're now ready to launch the container, we can do so via:
 Once we've obtained and setup Isaac, we can add in the ``opennav_visual_navigation`` project as a starting point.
 
 .. code: bash
-  # Clones the project and creates a colcon_ws relative to your pat 
+  # Clones the project and creates a colcon_ws relative to your path
   cd ${ISAAC_ROS_WS}/src && git clone git@github.com:open-navigation/opennav_visual_navigation.git
 
   # Obtains dependencies
@@ -310,12 +310,14 @@ The full command-line for this is:
         config:=nova-carter_hawk-4_imu \
         headless:=True
 
-You can also launch the recording from the provided convenience script:
-`./scripts/run_docker_nova_recorder.sh`
+This will launch the `isaac_ros_nova_recorder` node, which wraps `isaac_ros_data_recorder`, and a teleop node from the `nova_carter_bringup` package.  You can also launch the recording from the provided convenience script in the host environment:
+`./scripts/run_docker_nova_recorder.sh` 
+
+
 
 > [!NOTE]
 >
-> The `config` parameter is used to specify the set of sensors to use during mapping. The `nova-carter_hawk-4_imu` config uses only the 4 stereo cameras in the front of the Nova Carter robot, plus the onboard IMU. If you do not have the Hawk cameras or wish to use other sensors, such as the 3D-LIDAR, you can check out the other configs under `/etc/nova` . Using additional sensors will result in a larger `rosbag2` recording and could result in a significantly longer post-processing time.  
+> The `config` parameter is used to specify the set of sensors to use during mapping. The `nova-carter_hawk-4_imu` config uses only the 4 stereo cameras in the front of the Nova Carter robot, plus the onboard IMU. If you do not have the Hawk cameras or wish to use other sensors, you can check out the other configs under `/etc/nova` . Using additional sensors will result in a larger `rosbag2` recording and could result in a significantly longer post-processing time.  
 >
 > More details on the available configs can be found here:
 >
@@ -449,6 +451,17 @@ Simply run the main demonstration launch file and see it in action!
 
     ros2 launch opennav_visual_nav_demo visual_nav_demo_launch.py
 
+> [!NOTE]
+>
+> This wraps the larger command:
+> `ros2 launch nova_carter_bringup perceptor.launch.py use_foxglove_whitelist:=false stereo_camera_configuration:=front_left_right_configuration disable_vgl:=False vslam_load_map_folder_path:=$vslam_dir vgl_map_dir:=$vgl_dir occupancy_map_yaml_file:=$occupancy_map_path vslam_enable_slam:=True`
+>
+> Running this will require the user to attach to the container from a separate terminal and run:
+>
+> `ros2 launch nav2_bringup navigation_launch.py` 
+>
+> to launch Nav2. NVIDIA provides its own VSLAM stack, so Nav2 is not launched by default. 
+
 TODO video of it navigating around for the first time using all of this to go from A to B in freespace
 
 []: https://drive.google.com/file/d/1-p19A6RWov4SW0B3nbSD4VbTo_S2IvU4/view?usp=drive_link	"VSLAM Navigation, First Steps"
@@ -461,7 +474,7 @@ TODO video of it navigating around for the first time using all of this to go fr
 
 The demonstration uses the new (as of May 2025) feature: Nav2 Route Server.
 This uses a pre-defined graph of nodes and edges to use for long-range routing rather than global planning through a space.
-This can be usefulf for spaces that are too large to map, too large to realistically represent with a dense environmental model, applications where determinisim in routing is necessary, or applications where its important to limit where the robot is allowed to navigate (lanes, zones, etc).
+This can be useful for spaces that are too large to map, too large to realistically represent with a dense environmental model, applications where determinisim in routing is necessary, or applications where its important to limit where the robot is allowed to navigate (lanes, zones, etc).
 
 The visual navigation demonstration uses the route server to patrol a space using this route graph.
 We select a random node for demonstration purposes to allow the robot to navigate across the space frequently, but a structured policy could easily be created to optimize the patrol routing and task completion for specific applicaitons.
