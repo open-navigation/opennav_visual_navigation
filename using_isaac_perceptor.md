@@ -12,6 +12,8 @@ Whether you're developing for resource-constrained embedded systems or exploring
 > While vision-based solutions offer powerful and efficient capabilities they can face challenges in certain environments. Scenarios involving glass surfaces, featureless corridors, thin obstacles, sudden movements, vibrations, or prolonged stillness under changing lighting conditions may impact performance.
 > It's important to thoughtfully evaluate whether a visual navigation approach aligns with the specific demands and conditions of your application to ensure the best results.
 
+**Click on the image below to watch the demonstration video!**
+
 [![Isaac Perceptor Nav2 demo](https://img.youtube.com/vi/axvemCE_lLE/0.jpg)](https://www.youtube.com/watch?v=axvemCE_lLE)
 
 ## Preliminaries
