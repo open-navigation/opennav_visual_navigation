@@ -461,7 +461,7 @@ More demonstrations can be found here:
 
 This error occurs when the packages on the Nova Carter host install are different from those installed on the Docker container, specifically the TensorRT and nvblox packages. More specifically, this often occurs because the Nova Carter JetPack install provides 10.3.x versions of TensorRT(tensorrt,nvinfer,etc.) and the development Docker containers use 10.7.x
 
-See *Rebuilding TensorRT .engine files* for a step-by-step guide to fix this error.
+See [*Rebuilding TensorRT .engine files*](appendix/Rebuilding_tensorrt_engine.md) for a step-by-step guide to fix this error.
 
 `Error Code 4: API Usage Error`
 
